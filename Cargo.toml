@@ -8,6 +8,7 @@ homepage = "https://github.com/alerque/git-time-warp"
 repository = "https://github.com/alerque/git-time-warp"
 license = "GPL-3"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+
+[profile.release]
+lto = true
