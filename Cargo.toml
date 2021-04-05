@@ -11,7 +11,13 @@ build = "build.rs"
 
 [dependencies]
 
+  [dependencies.clap]
+  version = "3.0.0-beta.2"
+  features = [ "wrap_help" ]
+
 [build-dependencies]
+clap = "3.0.0-beta.2"
+clap_generate = "3.0.0-beta.2"
 
   [build-dependencies.vergen]
   version = "5.0.1"
