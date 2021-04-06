@@ -6,7 +6,7 @@ edition = "2018"
 description = "Rust library and CLI utility to reset file timestamps to repo state"
 homepage = "https://github.com/alerque/git-warp-time"
 repository = "https://github.com/alerque/git-warp-time"
-license = "GPL-3"
+license = "GPL-3.0-only"
 build = "build.rs"
 
 [dependencies]
