@@ -10,6 +10,7 @@ license = "GPL-3"
 build = "build.rs"
 
 [dependencies]
+filetime = "0.2.14"
 
   [dependencies.clap]
   version = "3.0.0-beta.2"
