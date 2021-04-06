@@ -1,7 +1,7 @@
 use clap::IntoApp;
-use git_time_warp::cli::Cli;
-use git_time_warp::{get_repo, reset_mtime};
-use git_time_warp::{Result, VERSION};
+use git_warp_time::cli::Cli;
+use git_warp_time::{get_repo, reset_mtime};
+use git_warp_time::{Result, VERSION};
 
 fn main() -> Result<()> {
     let app = Cli::into_app().version(VERSION);

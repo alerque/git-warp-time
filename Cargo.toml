@@ -1,11 +1,11 @@
 [package]
-name = "git-time-warp"
+name = "git-warp-time"
 version = "0.1.0"
 authors = ["Caleb Maclennan <caleb@alerque.com>"]
 edition = "2018"
 description = "Rust library and CLI utility to reset file timestamps to repo state"
-homepage = "https://github.com/alerque/git-time-warp"
-repository = "https://github.com/alerque/git-time-warp"
+homepage = "https://github.com/alerque/git-warp-time"
+repository = "https://github.com/alerque/git-warp-time"
 license = "GPL-3"
 build = "build.rs"
 
