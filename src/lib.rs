@@ -34,12 +34,17 @@ pub fn find_candidates(repo: &Repository) -> Result<FileSet> {
         .show(git2::StatusShow::IndexAndWorkdir);
     let statuses = repo.statuses(Some(&mut opts)).unwrap();
     for entry in statuses.iter() {
+        let path = entry.path().unwrap();
         match entry.status() {
             git2::Status::CURRENT => {
-                let path = entry.path().unwrap();
                 candidates.insert(path.to_string());
             }
-            _ => {}
+            git2::Status::WT_MODIFIED => {
+                println!("Ignored file with local modifications: {}", path);
+            }
+            git_state => {
+                println!("Ignored file in state {:?}: {}", git_state, path);
+            }
         }
     }
     Ok(candidates)
