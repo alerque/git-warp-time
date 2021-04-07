@@ -1,5 +1,7 @@
 # git warp-time
 
+[![Rust Lint Status](https://img.shields.io/github/workflow/status/alerque/git-warp-time/Rust%20Lint?label=Rust+Lint&logo=Rust)](https://github.com/alerque/git-warp-time/actions?workflow=Rust+Lint)
+
 CLI utility (and Rust library) that rewinds the last modified timestamp in filesystem metadata to be the time of the last commit in which each file was modified.
 
 Run from inside any Git working directory after clone, after any checkout operation that switches branches, after rebases, etc.
