@@ -19,7 +19,7 @@ For most use cases there is nothing wrong with the latest modification timestamp
 
 However many build systems rely on file modification timestamps to understand when something needs to be rebuilt.
 GNU Make is one example that relies entirely on timestamps, but there are many others.
-A few rely on checksums and keep a separate database of ‘last seen’ file states, but since this requires extra storage most build systems use what is available.
+A few rely on checksums (e.g. SCons) and keep a separate database of ‘last seen’ file states, but since this requires extra storage most build systems use what is available.
 What is available without the build system storing it's own state is your file system's meta data.
 
 The rub happens when you take advantage of Git's cheap branching model.
@@ -51,3 +51,11 @@ Running `git warp-time` after any clone, checkout, rebase, or similar operation 
 
 The result is portable.
 I can clone the project on a new system and without any build state data except the existing output files the project known what it does and doesn't need to rebuild.
+
+## When not to use this
+
+Not all Git projects will benefit from `git warp-time`.
+
+* If your build system doesn't use timestamps, this won't help you.
+* If your project generates a single output such as a binary, you probably need to rebuild when *any* of the inputs change so this won't help much.
+* If your build system supports incremental builds and you do creative things in your branches, you might completely confuse your build system and cause incomplete builds.
