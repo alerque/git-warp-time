@@ -16,4 +16,7 @@ pub struct Cli {
     /// Don't print anything about files touched or skipped
     #[clap(short, long)]
     pub quiet: bool,
+
+    /// Optional list of paths to operate on instead of scannning
+    pub paths: Vec<String>,
 }

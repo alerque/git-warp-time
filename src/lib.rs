@@ -9,11 +9,12 @@ pub mod cli;
 
 pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
 
-type FileSet = HashSet<String>;
+pub type FileSet = HashSet<String>;
 
 /// Options passed to `reset_mtime()`
 #[derive(Clone, Debug)]
 pub struct Options {
+    paths: Option<FileSet>,
     dirty: bool,
     ignored: bool,
     verbose: bool,
@@ -31,6 +32,7 @@ impl Options {
     /// Return a set of default options.
     pub fn new() -> Options {
         Options {
+            paths: None,
             dirty: false,
             ignored: false,
             verbose: false,
@@ -40,6 +42,7 @@ impl Options {
     /// Whether or not to touch locally modified files, default is false
     pub fn dirty(&self, flag: bool) -> Options {
         Options {
+            paths: self.paths.clone(),
             dirty: flag,
             ignored: self.ignored,
             verbose: self.verbose,
@@ -49,6 +52,7 @@ impl Options {
     /// Whether or not to touch ignored files, default is false
     pub fn ignored(&self, flag: bool) -> Options {
         Options {
+            paths: self.paths.clone(),
             dirty: self.dirty,
             ignored: flag,
             verbose: self.verbose,
@@ -58,21 +62,37 @@ impl Options {
     /// Whether or not to print output when touching or skipping files, default is false
     pub fn verbose(&self, flag: bool) -> Options {
         Options {
+            paths: self.paths.clone(),
             dirty: self.dirty,
             ignored: self.ignored,
             verbose: flag,
         }
     }
+
+    /// List of paths to operate on instead of scanning repository
+    pub fn paths(&self, input: Option<FileSet>) -> Options {
+        Options {
+            paths: input.clone(),
+            dirty: self.dirty,
+            ignored: self.ignored,
+            verbose: self.verbose,
+        }
+    }
 }
 
-/// Iterate over the working directory files, filter out any that have local modifications, are
-/// ignored by Git, or are in submodules and reset the file metadata mtime to the commit date of
-/// the last commit that affected the file in question.
+/// Iterate over either the explicit file list or the working directory files, filter out any that
+/// have local modifications, are ignored by Git, or are in submodules and reset the file metadata
+/// mtime to the commit date of the last commit that affected the file in question.
 pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
-    let candidates = find_candidates(&repo, &opts);
-    let workdir_files = find_files(&repo)?;
-    let f: HashSet<_> = workdir_files.intersection(&candidates).collect();
-    let touched = touch(&repo, f, opts)?;
+    let workdir_files = gather_workdir_files(&repo)?;
+    let touchables: FileSet = match opts.paths {
+        Some(ref paths) => workdir_files.intersection(&paths).cloned().collect(),
+        None => {
+            let candidates = gather_index_files(&repo, &opts);
+            workdir_files.intersection(&candidates).cloned().collect()
+        }
+    };
+    let touched = touch(&repo, touchables, &opts)?;
     Ok(touched)
 }
 
@@ -81,7 +101,7 @@ pub fn get_repo() -> Result<Repository> {
     Ok(Repository::open_from_env()?)
 }
 
-fn find_candidates(repo: &Repository, opts: &Options) -> FileSet {
+fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
     let mut candidates = FileSet::new();
     let mut status_options = git2::StatusOptions::new();
     status_options
@@ -124,7 +144,7 @@ fn find_candidates(repo: &Repository, opts: &Options) -> FileSet {
     candidates
 }
 
-fn find_files(repo: &Repository) -> Result<FileSet> {
+fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     let mut workdir_files = FileSet::new();
     let head = repo.head()?;
     let tree = head.peel_to_tree()?;
@@ -141,7 +161,7 @@ fn find_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
-fn touch(repo: &Repository, touchables: HashSet<&String>, opts: Options) -> Result<FileSet> {
+fn touch(repo: &Repository, touchables: HashSet<String>, opts: &Options) -> Result<FileSet> {
     let mut touched = FileSet::new();
     for path in touchables.iter() {
         let pathbuf = Path::new(path).to_path_buf();
