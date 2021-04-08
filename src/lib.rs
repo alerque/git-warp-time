@@ -15,6 +15,7 @@ type FileSet = HashSet<String>;
 #[derive(Clone, Debug)]
 pub struct Options {
     dirty: bool,
+    ignored: bool,
 }
 
 /// foo
@@ -28,7 +29,10 @@ impl Default for Options {
 impl Options {
     /// Return a set of default options.
     pub fn new() -> Options {
-        Options { dirty: false }
+        Options {
+            dirty: false,
+            ignored: false,
+        }
     }
 
     /// Whether or not to touch locally modified files, default is false
@@ -36,6 +40,14 @@ impl Options {
         Options {
             dirty: flag,
             ignored: self.ignored,
+        }
+    }
+
+    /// Whether or not to touch ignored files, default is false
+    pub fn ignored(&self, flag: bool) -> Options {
+        Options {
+            dirty: self.dirty,
+            ignored: flag,
         }
     }
 }
@@ -62,6 +74,7 @@ fn find_candidates(repo: &Repository, opts: &Options) -> FileSet {
     status_options
         .include_unmodified(true)
         .exclude_submodules(true)
+        .include_ignored(opts.ignored)
         .show(git2::StatusShow::IndexAndWorkdir);
     let statuses = repo.statuses(Some(&mut status_options)).unwrap();
     for entry in statuses.iter() {

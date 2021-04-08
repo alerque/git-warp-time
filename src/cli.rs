@@ -8,4 +8,8 @@ pub struct Cli {
     /// Include locally modified files
     #[clap(short, long)]
     pub dirty: bool,
+
+    /// Include ignored files
+    #[clap(short, long)]
+    pub ignored: bool,
 }

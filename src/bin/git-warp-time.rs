@@ -7,7 +7,9 @@ fn main() -> git_warp_time::Result<()> {
     let app = Cli::into_app().version(version);
     let matches = app.get_matches();
     let repo = get_repo()?;
-    let opts = git_warp_time::Options::new().dirty(matches.is_present("dirty"));
+    let opts = git_warp_time::Options::new()
+        .dirty(matches.is_present("dirty"))
+        .ignored(matches.is_present("ignore"));
     let files = reset_mtime(repo, opts)?;
     for file in files.iter() {
         println!("Rewound the clock: {}", file);
