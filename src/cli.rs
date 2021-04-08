@@ -1,6 +1,7 @@
 use clap::Clap;
 
-/// Reset file modification timestamps to the time they were last modified in Git version history.
+/// CLI utility that operates on the current working tree, resetting file modification timestamps
+/// to the date of the last commit in which they were modified.
 #[derive(Clap, Debug)]
 #[clap(bin_name = "git-warp-time")]
 pub struct Cli {}

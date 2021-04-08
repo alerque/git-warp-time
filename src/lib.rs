@@ -11,6 +11,9 @@ pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
 
 type FileSet = HashSet<String>;
 
+/// Iterate over the working directory files, filter out any that have local modifications, are
+/// ignored by Git, or are in submodules and reset the file metadata mtime to the commit date of
+/// the last commit that affected the file in question.
 pub fn reset_mtime(repo: Repository) -> Result<FileSet> {
     let candidates = find_candidates(&repo)?;
     let workdir_files = find_files(&repo)?;
@@ -19,7 +22,7 @@ pub fn reset_mtime(repo: Repository) -> Result<FileSet> {
     Ok(touched)
 }
 
-/// Get repository object from current working directory
+/// Return a repository discovered from from the current working directory or $GIT_DIR settings.
 pub fn get_repo() -> Result<Repository> {
     Ok(Repository::open_from_env()?)
 }
