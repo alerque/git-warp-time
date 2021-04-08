@@ -27,7 +27,7 @@ pub fn get_repo() -> Result<Repository> {
     Ok(Repository::open_from_env()?)
 }
 
-pub fn find_candidates(repo: &Repository) -> Result<FileSet> {
+fn find_candidates(repo: &Repository) -> Result<FileSet> {
     let mut candidates = FileSet::new();
     let mut opts = git2::StatusOptions::new();
     opts.include_unmodified(true)
@@ -51,7 +51,7 @@ pub fn find_candidates(repo: &Repository) -> Result<FileSet> {
     Ok(candidates)
 }
 
-pub fn find_files(repo: &Repository) -> Result<FileSet> {
+fn find_files(repo: &Repository) -> Result<FileSet> {
     let mut workdir_files = FileSet::new();
     let head = repo.head()?;
     let tree = head.peel_to_tree()?;
@@ -68,7 +68,7 @@ pub fn find_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
-pub fn touch(repo: &Repository, touchables: HashSet<&String>) -> Result<FileSet> {
+fn touch(repo: &Repository, touchables: HashSet<&String>) -> Result<FileSet> {
     let mut touched = FileSet::new();
     for path in touchables.iter() {
         let pathbuf = Path::new(path).to_path_buf();
