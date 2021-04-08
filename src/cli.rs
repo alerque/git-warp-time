@@ -12,4 +12,8 @@ pub struct Cli {
     /// Include ignored files
     #[clap(short, long)]
     pub ignored: bool,
+
+    /// Don't print anything about files touched or skipped
+    #[clap(short, long)]
+    pub quiet: bool,
 }

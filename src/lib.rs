@@ -16,6 +16,7 @@ type FileSet = HashSet<String>;
 pub struct Options {
     dirty: bool,
     ignored: bool,
+    verbose: bool,
 }
 
 /// foo
@@ -32,6 +33,7 @@ impl Options {
         Options {
             dirty: false,
             ignored: false,
+            verbose: false,
         }
     }
 
@@ -40,6 +42,7 @@ impl Options {
         Options {
             dirty: flag,
             ignored: self.ignored,
+            verbose: self.verbose,
         }
     }
 
@@ -48,6 +51,16 @@ impl Options {
         Options {
             dirty: self.dirty,
             ignored: flag,
+            verbose: self.verbose,
+        }
+    }
+
+    /// Whether or not to print output when touching or skipping files, default is false
+    pub fn verbose(&self, flag: bool) -> Options {
+        Options {
+            dirty: self.dirty,
+            ignored: self.ignored,
+            verbose: flag,
         }
     }
 }
@@ -59,7 +72,7 @@ pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
     let candidates = find_candidates(&repo, &opts);
     let workdir_files = find_files(&repo)?;
     let f: HashSet<_> = workdir_files.intersection(&candidates).collect();
-    let touched = touch(&repo, f)?;
+    let touched = touch(&repo, f, opts)?;
     Ok(touched)
 }
 
@@ -87,11 +100,15 @@ fn find_candidates(repo: &Repository, opts: &Options) -> FileSet {
                 if opts.dirty {
                     candidates.insert(path.to_string());
                 } else {
-                    println!("Ignored file with local modifications: {}", path);
+                    if opts.verbose {
+                        println!("Ignored file with local modifications: {}", path);
+                    }
                 }
             }
             git_state => {
-                println!("Ignored file in state {:?}: {}", git_state, path);
+                if opts.verbose {
+                    println!("Ignored file in state {:?}: {}", git_state, path);
+                }
             }
         }
     }
@@ -115,7 +132,7 @@ fn find_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
-fn touch(repo: &Repository, touchables: HashSet<&String>) -> Result<FileSet> {
+fn touch(repo: &Repository, touchables: HashSet<&String>, opts: Options) -> Result<FileSet> {
     let mut touched = FileSet::new();
     for path in touchables.iter() {
         let pathbuf = Path::new(path).to_path_buf();
@@ -178,6 +195,9 @@ fn touch(repo: &Repository, touchables: HashSet<&String>) -> Result<FileSet> {
         let file_mtime = FileTime::from_last_modification_time(&metadata);
         if file_mtime != commit_time {
             filetime::set_file_mtime(path, commit_time)?;
+            if opts.verbose {
+                println!("Rewound the clock: {}", path);
+            }
             touched.insert((*path).to_string());
         }
     }
