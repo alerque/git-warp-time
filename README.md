@@ -26,7 +26,11 @@ default-features = false
 ```rust
 use git_warp_time::{get_repo, reset_mtime};
 let repo = get_repo().unwrap();
-let opts = git_warp_time::Options::new().verbose(true);
+let paths = git_warp_time::FileSet::new()
+	.insert("foo.txt");
+let opts = git_warp_time::Options::new()
+	.verbose(true).
+	.paths(paths);
 let files = reset_mtime(repo, opts).unwrap();
 println!("Actioned files: {:?}", files);
 ```
