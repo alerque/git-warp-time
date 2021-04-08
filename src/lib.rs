@@ -23,7 +23,7 @@ pub fn reset_mtime(repo: Repository) -> Result<FileSet> {
 
 /// Get repository object from current working directory
 pub fn get_repo() -> Result<Repository> {
-    Ok(Repository::discover("./")?)
+    Ok(Repository::open_from_env()?)
 }
 
 pub fn find_candidates(repo: &Repository) -> Result<FileSet> {
