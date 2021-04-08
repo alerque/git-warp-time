@@ -5,6 +5,8 @@
 
 CLI utility (and Rust library) that rewinds the last modified timestamp in filesystem metadata to be the time of the last commit in which each file was modified.
 
+## CLI usage
+
 Run from inside any Git working directory after clone, after any checkout operation that switches branches, after rebases, etc.
 
 ```console
@@ -13,7 +15,22 @@ $ cd ‹project›
 $ git warp-time
 ```
 
-## The story
+## Library Usage
+
+```toml
+[dependencies]
+git-warp-time = "0.3.0"
+default-features = false
+```
+
+```rust
+use git_warp_time::{get_repo, reset_mtime};
+let repo = get_repo()?;
+let files = reset_mtime(repo)?;
+println!("Rewound the clock on files: {:?}", files);
+```
+
+# The story
 
 Whenever you `git clone` a project or `git checkout` a different branch, Git will write all the relevant files to your system at the moment you run the Git command.
 Logical enough.
