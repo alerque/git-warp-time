@@ -72,7 +72,7 @@ impl Options {
     /// List of paths to operate on instead of scanning repository
     pub fn paths(&self, input: Option<FileSet>) -> Options {
         Options {
-            paths: input.clone(),
+            paths: input,
             dirty: self.dirty,
             ignored: self.ignored,
             verbose: self.verbose,
@@ -119,19 +119,15 @@ fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
             git2::Status::INDEX_MODIFIED => {
                 if opts.dirty {
                     candidates.insert(path.to_string());
-                } else {
-                    if opts.verbose {
-                        println!("Ignored file with staged modifications: {}", path);
-                    }
+                } else if opts.verbose {
+                    println!("Ignored file with staged modifications: {}", path);
                 }
             }
             git2::Status::WT_MODIFIED => {
                 if opts.dirty {
                     candidates.insert(path.to_string());
-                } else {
-                    if opts.verbose {
-                        println!("Ignored file with local modifications: {}", path);
-                    }
+                } else if opts.verbose {
+                    println!("Ignored file with local modifications: {}", path);
                 }
             }
             git_state => {

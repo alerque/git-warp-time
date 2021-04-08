@@ -12,7 +12,7 @@ fn main() -> git_warp_time::Result<()> {
     let mut opts = git_warp_time::Options::new()
         .dirty(matches.is_present("dirty"))
         .ignored(matches.is_present("ignore"))
-        .verbose(matches.is_present("quiet") == false);
+        .verbose(!matches.is_present("quiet"));
     if matches.is_present("paths") {
         let mut paths: FileSet = FileSet::new();
         for path in positionals.unwrap() {

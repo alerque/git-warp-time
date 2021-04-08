@@ -10,7 +10,7 @@ fn main() {
     };
     // Try to output flags based on Git repo, but if that fails turn off Git features and try again
     // with just cargo generated version info
-    if !vergen(flags).is_ok() {
+    if vergen(flags).is_err() {
         *flags.git_mut().semver_mut() = false;
         *flags.git_mut().branch_mut() = false;
         *flags.git_mut().commit_timestamp_mut() = false;
