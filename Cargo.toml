@@ -11,12 +11,14 @@ license = "GPL-3.0-only"
 [[bin]]
 name = "git-warp-time"
 build = "build.rs"
+required-features = ["cli"]
 
 [dependencies]
 filetime = "0.2.14"
 
   [dependencies.clap]
   version = "3.0.0-beta.2"
+  optional = true
   features = [ "wrap_help" ]
 
   [dependencies.git2]
@@ -24,13 +26,16 @@ filetime = "0.2.14"
   default-features = false
 
 [build-dependencies]
-clap = "3.0.0-beta.2"
-clap_generate = "3.0.0-beta.2"
+clap = { version = "3.0.0-beta.2", optional = true }
+clap_generate = { version = "3.0.0-beta.2", optional = true }
 
   [build-dependencies.vergen]
   version = "5.0.1"
   default-features = false
   features = [ "build", "git" ]
+
+[features]
+cli = ["clap"]
 
 [profile.release]
 lto = true
