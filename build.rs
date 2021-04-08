@@ -8,5 +8,14 @@ fn main() {
         *flags.git_mut().semver_mut() = false;
         println!("cargo:rustc-env=VERGEN_GIT_SEMVER={}", val)
     };
-    vergen(flags).expect("Unable to generate the cargo keys!");
+    // Try to output flags based on Git repo, but if that fails turn off Git features and try again
+    // with just cargo generated version info
+    if !vergen(flags).is_ok() {
+        *flags.git_mut().semver_mut() = false;
+        *flags.git_mut().branch_mut() = false;
+        *flags.git_mut().commit_timestamp_mut() = false;
+        *flags.git_mut().sha_mut() = false;
+        *flags.git_mut().rerun_on_head_change_mut() = false;
+        vergen(flags).expect("Unable to generate the cargo keys!");
+    }
 }
