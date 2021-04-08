@@ -15,7 +15,7 @@ type FileSet = HashSet<String>;
 /// ignored by Git, or are in submodules and reset the file metadata mtime to the commit date of
 /// the last commit that affected the file in question.
 pub fn reset_mtime(repo: Repository) -> Result<FileSet> {
-    let candidates = find_candidates(&repo)?;
+    let candidates = find_candidates(&repo);
     let workdir_files = find_files(&repo)?;
     let f: HashSet<_> = workdir_files.intersection(&candidates).collect();
     let touched = touch(&repo, f)?;
@@ -27,7 +27,7 @@ pub fn get_repo() -> Result<Repository> {
     Ok(Repository::open_from_env()?)
 }
 
-fn find_candidates(repo: &Repository) -> Result<FileSet> {
+fn find_candidates(repo: &Repository) -> FileSet {
     let mut candidates = FileSet::new();
     let mut opts = git2::StatusOptions::new();
     opts.include_unmodified(true)
@@ -48,7 +48,7 @@ fn find_candidates(repo: &Repository) -> Result<FileSet> {
             }
         }
     }
-    Ok(candidates)
+    candidates
 }
 
 fn find_files(repo: &Repository) -> Result<FileSet> {
