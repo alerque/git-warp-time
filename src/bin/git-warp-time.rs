@@ -6,7 +6,7 @@ fn main() -> git_warp_time::Result<()> {
     let version = option_env!("VERGEN_GIT_SEMVER").unwrap_or_else(|| env!("VERGEN_BUILD_SEMVER"));
     let app = Cli::into_app().version(version);
     let matches = app.get_matches();
-    let repo = get_repo()?;
+    let repo = get_repo().unwrap();
     let opts = git_warp_time::Options::new()
         .dirty(matches.is_present("dirty"))
         .ignored(matches.is_present("ignore"))
