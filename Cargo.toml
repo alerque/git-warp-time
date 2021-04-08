@@ -35,6 +35,7 @@ clap_generate = { version = "3.0.0-beta.2", optional = true }
   features = [ "build", "git" ]
 
 [features]
+default = ["cli"]
 cli = ["clap"]
 
 [profile.release]
