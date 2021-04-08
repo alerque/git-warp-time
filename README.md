@@ -17,12 +17,6 @@ $ git warp-time
 
 ## Library Usage
 
-```toml
-[dependencies]
-git-warp-time = "0.3.0"
-default-features = false
-```
-
 ```rust
 use git_warp_time::{get_repo, reset_mtime};
 let repo = get_repo().unwrap();
