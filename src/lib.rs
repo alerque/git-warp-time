@@ -13,7 +13,9 @@ type FileSet = HashSet<String>;
 
 /// Options passed to `reset_mtime()`
 #[derive(Clone, Debug)]
-pub struct Options {}
+pub struct Options {
+    dirty: bool,
+}
 
 /// foo
 impl Default for Options {
@@ -26,15 +28,23 @@ impl Default for Options {
 impl Options {
     /// Return a set of default options.
     pub fn new() -> Options {
-        Options {}
+        Options { dirty: false }
+    }
+
+    /// Whether or not to touch locally modified files, default is false
+    pub fn dirty(&self, flag: bool) -> Options {
+        Options {
+            dirty: flag,
+            ignored: self.ignored,
+        }
     }
 }
 
 /// Iterate over the working directory files, filter out any that have local modifications, are
 /// ignored by Git, or are in submodules and reset the file metadata mtime to the commit date of
 /// the last commit that affected the file in question.
-pub fn reset_mtime(repo: Repository, _opts: Options) -> Result<FileSet> {
-    let candidates = find_candidates(&repo);
+pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
+    let candidates = find_candidates(&repo, &opts);
     let workdir_files = find_files(&repo)?;
     let f: HashSet<_> = workdir_files.intersection(&candidates).collect();
     let touched = touch(&repo, f)?;
@@ -46,13 +56,14 @@ pub fn get_repo() -> Result<Repository> {
     Ok(Repository::open_from_env()?)
 }
 
-fn find_candidates(repo: &Repository) -> FileSet {
+fn find_candidates(repo: &Repository, opts: &Options) -> FileSet {
     let mut candidates = FileSet::new();
-    let mut opts = git2::StatusOptions::new();
-    opts.include_unmodified(true)
+    let mut status_options = git2::StatusOptions::new();
+    status_options
+        .include_unmodified(true)
         .exclude_submodules(true)
         .show(git2::StatusShow::IndexAndWorkdir);
-    let statuses = repo.statuses(Some(&mut opts)).unwrap();
+    let statuses = repo.statuses(Some(&mut status_options)).unwrap();
     for entry in statuses.iter() {
         let path = entry.path().unwrap();
         match entry.status() {
@@ -60,7 +71,11 @@ fn find_candidates(repo: &Repository) -> FileSet {
                 candidates.insert(path.to_string());
             }
             git2::Status::WT_MODIFIED => {
-                println!("Ignored file with local modifications: {}", path);
+                if opts.dirty {
+                    candidates.insert(path.to_string());
+                } else {
+                    println!("Ignored file with local modifications: {}", path);
+                }
             }
             git_state => {
                 println!("Ignored file in state {:?}: {}", git_state, path);

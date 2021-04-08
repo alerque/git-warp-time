@@ -4,4 +4,8 @@ use clap::Clap;
 /// to the date of the last commit in which they were modified.
 #[derive(Clap, Debug)]
 #[clap(bin_name = "git-warp-time")]
-pub struct Cli {}
+pub struct Cli {
+    /// Include locally modified files
+    #[clap(short, long)]
+    pub dirty: bool,
+}
