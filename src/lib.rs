@@ -11,10 +11,29 @@ pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
 
 type FileSet = HashSet<String>;
 
+/// Options passed to `reset_mtime()`
+#[derive(Clone, Debug)]
+pub struct Options {}
+
+/// foo
+impl Default for Options {
+    /// Return a new options strut with default values.
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Options {
+    /// Return a set of default options.
+    pub fn new() -> Options {
+        Options {}
+    }
+}
+
 /// Iterate over the working directory files, filter out any that have local modifications, are
 /// ignored by Git, or are in submodules and reset the file metadata mtime to the commit date of
 /// the last commit that affected the file in question.
-pub fn reset_mtime(repo: Repository) -> Result<FileSet> {
+pub fn reset_mtime(repo: Repository, _opts: Options) -> Result<FileSet> {
     let candidates = find_candidates(&repo);
     let workdir_files = find_files(&repo)?;
     let f: HashSet<_> = workdir_files.intersection(&candidates).collect();
