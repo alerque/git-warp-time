@@ -96,6 +96,15 @@ fn find_candidates(repo: &Repository, opts: &Options) -> FileSet {
             git2::Status::CURRENT => {
                 candidates.insert(path.to_string());
             }
+            git2::Status::INDEX_MODIFIED => {
+                if opts.dirty {
+                    candidates.insert(path.to_string());
+                } else {
+                    if opts.verbose {
+                        println!("Ignored file with staged modifications: {}", path);
+                    }
+                }
+            }
             git2::Status::WT_MODIFIED => {
                 if opts.dirty {
                     candidates.insert(path.to_string());
