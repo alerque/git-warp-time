@@ -66,6 +66,17 @@ check-version: git-warp-time$(EXEEXT) | .version
 installcheck-local:
 	./$(_gwt) version
 
+.PHONY: lint
+lint: rustfmt clippy
+
+.PHONY: rustfmt
+rustfmt:
+	$(GIT) ls-files '*.rs' | $(XARGS) rustfmt --check
+
+.PHONY: clippy
+clippy:
+	cargo clippy -- -D warnings
+
 dist-hook:
 	cd $(distdir)
 	echo $(VERSION) > .tarball-version
