@@ -5,6 +5,10 @@
 
 CLI utility (and Rust library) that rewinds the last modified timestamp in filesystem metadata to be the time of the last commit in which each file was modified.
 
+For use as a Rust library, include in your `Cargo.toml` as documented on the [crates.io listing](https://crates.io/crates/git-warp-time) and use per [the API documentation](https://docs.rs/git-warp-time).
+
+For use as a CLI utility, you can either install with `cargo install git-warp-time` for just a single binary or download the latest source tarball and use `./configure; make; make install` for a full installation that includes autcompletion for Zsh, Bash, Fish, Elvish, and PowerShell.
+
 ## CLI usage
 
 Run from inside any Git working directory after clone, after any checkout operation that switches branches, after rebases, etc.
@@ -12,7 +16,29 @@ Run from inside any Git working directory after clone, after any checkout operat
 ```console
 $ git clone ‹project›
 $ cd ‹project›
-$ git warp-time
+$ git-warp-time
+```
+
+For more usage see the `--help` output:
+
+```console
+$ git-warp-time --help
+git-warp-time v0.4.1
+CLI utility that operates on the current working tree, resetting file modification
+timestamps to the date of the last commit in which they were modified
+
+USAGE:
+    git-warp-time [FLAGS] [paths]...
+
+ARGS:
+    <paths>...    Optional list of paths to operate on instead of scannning
+
+FLAGS:
+    -d, --dirty      Include locally modified files
+    -h, --help       Prints help information
+    -i, --ignored    Include ignored files
+    -q, --quiet      Don't print anything about files touched or skipped
+    -V, --version    Prints version information
 ```
 
 ## Library Usage
