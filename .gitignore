@@ -1,1 +1,14 @@
 /target
+/git-warp-time
+git-warp-time-*
+.version
+.version-prev
+Makefile
+Makefile.in
+aclocal.m4
+build-aux/install-sh
+build-aux/missing
+autom4te.cache
+config.log
+config.status
+configure
