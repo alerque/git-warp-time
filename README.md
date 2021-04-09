@@ -7,7 +7,7 @@ CLI utility (and Rust library) that rewinds the last modified timestamp in files
 
 For use as a Rust library, include in your `Cargo.toml` as documented on the [crates.io listing](https://crates.io/crates/git-warp-time) and use per [the API documentation](https://docs.rs/git-warp-time).
 
-For use as a CLI utility, you can either install with `cargo install git-warp-time` for just a single binary or download the latest source tarball and use `./configure; make; make install` for a full installation that includes autcompletion for Zsh, Bash, Fish, Elvish, and PowerShell.
+For use as a CLI utility, first check whether your distro has packages (e.g. Arch Linux [AUR](https://aur.archlinux.org/packages/git-warp-time/)). Otherwise you can either install with `cargo install git-warp-time` for just a single binary or download the latest source tarball and use `./configure; make; make install` for a full installation that includes autcompletion for Zsh, Bash, Fish, Elvish, and PowerShell.
 
 ## CLI usage
 
