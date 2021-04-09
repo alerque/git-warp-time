@@ -37,7 +37,7 @@ clap_generate = { version = "3.0.0-beta.2", optional = true }
 
 [features]
 default = ["cli"]
-cli = ["clap"]
+cli = ["clap", "clap_generate"]
 
 [profile.release]
 lto = true

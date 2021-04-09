@@ -19,6 +19,21 @@ EXTRA_DIST = build-aux/git-version-gen
 BUILT_SOURCES = .version
 CLEANFILES = $(BUILT_SOURCES) $(bin_PROGRAMS) $(dist_scripts_SCRIPTS)
 
+if ENABLE_BASH_COMPLETION
+bashcompletiondir = $(BASH_COMPLETION_DIR)
+nodist_bashcompletion_DATA = $(COMPLETIONS_OUT_DIR)/$(_gwt)
+endif
+
+if ENABLE_FISH_COMPLETION
+fishcompletiondir = $(FISH_COMPLETION_DIR)
+nodist_fishcompletion_DATA = $(COMPLETIONS_OUT_DIR)/$(_gwt).fish
+endif
+
+if ENABLE_ZSH_COMPLETION
+zshcompletiondir = $(ZSH_COMPLETION_DIR)
+nodist_zshcompletion_DATA = $(COMPLETIONS_OUT_DIR)/_$(_gwt)
+endif
+
 if DEBUG_RELEASE
 CARGO_RELEASE_ARGS=--all-features
 _TARGETDIR=debug
@@ -40,9 +55,25 @@ cargo_verbose_0 =
 cargo_verbose_1 = --verbose
 
 CARGO_TARGET = target/$(_TARGETDIR)/git-warp-time
+COMPLETIONS_OUT_DIR = target/$(_TARGETDIR)/completions
 
 git-warp-time$(EXEEXT): $(CARGO_TARGET)
 	cp -bf $< $@
+
+$(COMPLETIONS_OUT_DIR)/$(_gwt): $(CARGO_TARGET)
+	cp -bf $(COMPLETIONS_OUT_DIR)/git-warp-time.bash $@
+
+$(COMPLETIONS_OUT_DIR)/$(_gwt).elv: $(CARGO_TARGET)
+	cp -bf $(COMPLETIONS_OUT_DIR)/git-warp-time.elv $@
+
+$(COMPLETIONS_OUT_DIR)/$(_gwt).fish: $(CARGO_TARGET)
+	cp -bf $(COMPLETIONS_OUT_DIR)/git-warp-time.fish $@
+
+$(COMPLETIONS_OUT_DIR)/_$(_gwt).ps1: $(CARGO_TARGET)
+	cp -bf $(COMPLETIONS_OUT_DIR)/_git-warp-time.ps1 $@
+
+$(COMPLETIONS_OUT_DIR)/_$(_gwt): $(CARGO_TARGET)
+	cp -bf $(COMPLETIONS_OUT_DIR)/_git-warp-time $@
 
 $(CARGO_TARGET): $(git_warp_time_SOURCES)
 	cargo build $(CARGO_VERBOSE) $(CARGO_RELEASE_ARGS)
