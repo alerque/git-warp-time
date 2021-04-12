@@ -15,33 +15,36 @@ EXTRA_git_warp_time_SOURCES = Cargo.lock
 bin_PROGRAMS = git-warp-time
 EXTRA_DIST = build-aux/git-version-gen
 
-BUILT_SOURCES = .version .cargo_out_dir
+BUILT_SOURCES = .version
 CLEANFILES = $(BUILT_SOURCES) .version-prev $(bin_PROGRAMS) $(dist_scripts_SCRIPTS)
 
 if DEBUG_RELEASE
-CARGO_RELEASE_ARGS=--all-features
-_TARGETDIR=debug
+CARGO_RELEASE_ARGS = --all-features
 else
-CARGO_RELEASE_ARGS=--release --locked --all-features
-_TARGETDIR=release
+CARGO_RELEASE_ARGS = --release --locked --all-features
 endif
 
-CARGO_TARGET = target/$(_TARGETDIR)/$(PACKAGE_NAME)
+CARGO_ENV = CARGO_TARGET_DIR=@abs_top_builddir@/target
+RUST_BIN = @abs_top_builddir@/target/@RUST_TARGET_SUBDIR@/$(PACKAGE_NAME)
+_RUST_OUT = @abs_top_builddir@/target/@RUST_TARGET_SUBDIR@/.cargo_out_dir
 COMPLETIONS_OUT_DIR = completions
 
 if ENABLE_BASH_COMPLETION
 bashcompletiondir = $(BASH_COMPLETION_DIR)
 nodist_bashcompletion_DATA = $(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME)
+CLEANFILES += $(nodist_bashcompletion_DATA)
 endif
 
 if ENABLE_FISH_COMPLETION
 fishcompletiondir = $(FISH_COMPLETION_DIR)
 nodist_fishcompletion_DATA = $(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).fish
+CLEANFILES += $(nodist_fishcompletion_DATA)
 endif
 
 if ENABLE_ZSH_COMPLETION
 zshcompletiondir = $(ZSH_COMPLETION_DIR)
 nodist_zshcompletion_DATA = $(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME)
+CLEANFILES += $(nodist_zshcompletion_DATA)
 endif
 
 export GWT_VERSION = v$(VERSION)
@@ -56,31 +59,32 @@ cargo_verbose_ = $(cargo_verbose_$(AM_DEFAULT_VERBOSITY))
 cargo_verbose_0 =
 cargo_verbose_1 = --verbose
 
-$(PACKAGE_NAME)$(EXEEXT): $(CARGO_TARGET)
-	cp -bf $< $@
-
 $(COMPLETIONS_OUT_DIR):
 	mkdir -p $@
 
-$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME): $(CARGO_TARGET) | .cargo_out_dir $(COMPLETIONS_OUT_DIR)
-	cp -bf $$(cat .cargo_out_dir)/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).bash $@
+git-warp-time$(EXEEXT): $(RUST_BIN)
+	cp -bf $< $@
 
-$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).elv: $(CARGO_TARGET) | .cargo_out_dir $(COMPLETIONS_OUT_DIR)
-	cp -bf $$(cat .cargo_out_dir)/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).elv $@
+$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME): $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
+	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).bash $@
 
-$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).fish: $(CARGO_TARGET) | .cargo_out_dir $(COMPLETIONS_OUT_DIR)
-	cp -bf $$(cat .cargo_out_dir)/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).fish $@
+$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).elv: $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
+	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).elv $@
 
-$(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME).ps1: $(CARGO_TARGET) | .cargo_out_dir $(COMPLETIONS_OUT_DIR)
-	cp -bf $$(cat .cargo_out_dir)/$(COMPLETIONS_OUT_DIR)/_git-warp-time.ps1 $@
+$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).fish: $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
+	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).fish $@
 
-$(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME): $(CARGO_TARGET) | .cargo_out_dir $(COMPLETIONS_OUT_DIR)
-	cp -bf $$(cat .cargo_out_dir)/$(COMPLETIONS_OUT_DIR)/_git-warp-time $@
+$(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME).ps1: $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
+	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/_git-warp-time.ps1 $@
 
-.cargo_out_dir $(CARGO_TARGET): $(git_warp_time_SOURCES)
-	$(CARGO) build $(CARGO_VERBOSE) $(CARGO_RELEASE_ARGS)
-	$(CARGO) build --quiet --message-format=json $(CARGO_RELEASE_ARGS) |
-		$(JQ) -sr 'map(select(.reason == "build-script-executed")) | last | .out_dir' > .cargo_out_dir
+$(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME): $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
+	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/_git-warp-time $@
+
+$(_RUST_OUT) $(RUST_BIN): $(git_warp_time_SOURCES) $(EXTRA_git_warp_time_SOURCES)
+	cd $(top_srcdir)
+	$(CARGO_ENV) $(CARGO) build $(CARGO_VERBOSE) $(CARGO_RELEASE_ARGS)
+	$(CARGO_ENV) $(CARGO) build --quiet --message-format=json $(CARGO_RELEASE_ARGS) |
+		$(JQ) -sr 'map(select(.reason == "build-script-executed")) | last | .out_dir' > $(_RUST_OUT)
 
 .version: $(shell $(AWK) '{print ".git/" $$2}' .git/HEAD 2>/dev/null ||:)
 	[ -e "$@" ] && mv "$@" "$@-prev" || $(if $<,touch,cp "$(srcdir)/.tarball-version") "$@-prev"
@@ -88,14 +92,16 @@ $(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME): $(CARGO_TARGET) | .cargo_ou
 	$(CMP) -s "$@" "$@-prev" || autoreconf configure.ac --force
 
 clean-local:
-	$(CARGO) clean
+	cd $(top_srcdir)
+	$(CARGO_ENV) $(CARGO) clean
 
 check-local: cargo-test check-version
 
-cargo-test: $(PACKAGE_NAME)$(EXEEXT)
-	$(CARGO) test --locked
+cargo-test: $(PACKAGE_NAME)
+	cd $(srcdir)
+	$(CARGO_ENV) $(CARGO) test --locked
 
-check-version: $(PACKAGE_NAME)$(EXEEXT) | .version
+check-version: $(PACKAGE_NAME) | .version
 	./$< --version | grep -Ff $|
 
 installcheck-local:
@@ -110,7 +116,8 @@ rustfmt:
 
 .PHONY: clippy
 clippy:
-	$(CARGO) clippy -- -D warnings
+	cd $(srcdir)
+	$(CARGO_ENV) $(CARGO) clippy -- -D warnings
 
 dist-hook:
 	printf "$(VERSION)" > "$(distdir)/.tarball-version"
