@@ -16,7 +16,7 @@ bin_PROGRAMS = git-warp-time
 EXTRA_DIST = build-aux/git-version-gen
 
 BUILT_SOURCES = .version .cargo_out_dir
-CLEANFILES = $(BUILT_SOURCES) $(bin_PROGRAMS) $(dist_scripts_SCRIPTS)
+CLEANFILES = $(BUILT_SOURCES) .version-prev $(bin_PROGRAMS) $(dist_scripts_SCRIPTS)
 
 if DEBUG_RELEASE
 CARGO_RELEASE_ARGS=--all-features
@@ -83,8 +83,8 @@ $(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME): $(CARGO_TARGET) | .cargo_ou
 		$(JQ) -sr 'map(select(.reason == "build-script-executed")) | last | .out_dir' > .cargo_out_dir
 
 .version: $(shell $(AWK) '{print ".git/" $$2}' .git/HEAD 2>/dev/null ||:)
-	[ -e "$@" ] && mv "$@" "$@-prev" || touch "$@-prev"
-	$(if $<,./build-aux/git-version-gen .tarball-version,printf "$(VERSION)") > "$@"
+	[ -e "$@" ] && mv "$@" "$@-prev" || $(if $<,touch,cp "$(srcdir)/.tarball-version") "$@-prev"
+	$(if $<,./build-aux/git-version-gen "$(srcdir)/.tarball-version",printf "$(VERSION)") > "$@"
 	$(CMP) -s "$@" "$@-prev" || autoreconf configure.ac --force
 
 clean-local:
@@ -113,5 +113,4 @@ clippy:
 	$(CARGO) clippy -- -D warnings
 
 dist-hook:
-	cd $(distdir)
-	echo $(VERSION) > .tarball-version
+	printf "$(VERSION)" > "$(distdir)/.tarball-version"
