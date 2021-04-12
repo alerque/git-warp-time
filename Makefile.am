@@ -5,9 +5,8 @@ ACLOCAL_AMFLAGS = -I build-aux
 .SECONDEXPANSION:
 .DELETE_ON_ERROR:
 
-_gwt = $(program_prefix)$(shell $(SED) -e "$(program_transform_name)" <<< git-warp-time)$(program_suffix)
-
-licensedir = $(datarootdir)/licenses/git-warp-time
+licensedir = $(datarootdir)/licenses/$(TRANSFORMED_PACKAGE_NAME)
+docdir = $(datarootdir)/doc/$(TRANSFORMED_PACKAGE_NAME)
 
 dist_doc_DATA = README.md
 dist_license_DATA = LICENSE.md
@@ -21,17 +20,17 @@ CLEANFILES = $(BUILT_SOURCES) $(bin_PROGRAMS) $(dist_scripts_SCRIPTS)
 
 if ENABLE_BASH_COMPLETION
 bashcompletiondir = $(BASH_COMPLETION_DIR)
-nodist_bashcompletion_DATA = $(COMPLETIONS_OUT_DIR)/$(_gwt)
+nodist_bashcompletion_DATA = $(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME)
 endif
 
 if ENABLE_FISH_COMPLETION
 fishcompletiondir = $(FISH_COMPLETION_DIR)
-nodist_fishcompletion_DATA = $(COMPLETIONS_OUT_DIR)/$(_gwt).fish
+nodist_fishcompletion_DATA = $(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).fish
 endif
 
 if ENABLE_ZSH_COMPLETION
 zshcompletiondir = $(ZSH_COMPLETION_DIR)
-nodist_zshcompletion_DATA = $(COMPLETIONS_OUT_DIR)/_$(_gwt)
+nodist_zshcompletion_DATA = $(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME)
 endif
 
 if DEBUG_RELEASE
@@ -54,25 +53,25 @@ cargo_verbose_ = $(cargo_verbose_$(AM_DEFAULT_VERBOSITY))
 cargo_verbose_0 =
 cargo_verbose_1 = --verbose
 
-CARGO_TARGET = target/$(_TARGETDIR)/git-warp-time
+CARGO_TARGET = target/$(_TARGETDIR)/$(PACKAGE_NAME)
 COMPLETIONS_OUT_DIR = target/$(_TARGETDIR)/completions
 
-git-warp-time$(EXEEXT): $(CARGO_TARGET)
+$(PACKAGE_NAME)$(EXEEXT): $(CARGO_TARGET)
 	cp -bf $< $@
 
-$(COMPLETIONS_OUT_DIR)/$(_gwt): $(CARGO_TARGET)
-	cp -bf $(COMPLETIONS_OUT_DIR)/git-warp-time.bash $@
+$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME): $(CARGO_TARGET)
+	cp -bf $(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).bash $@
 
-$(COMPLETIONS_OUT_DIR)/$(_gwt).elv: $(CARGO_TARGET)
-	cp -bf $(COMPLETIONS_OUT_DIR)/git-warp-time.elv $@
+$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).elv: $(CARGO_TARGET)
+	cp -bf $(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).elv $@
 
-$(COMPLETIONS_OUT_DIR)/$(_gwt).fish: $(CARGO_TARGET)
-	cp -bf $(COMPLETIONS_OUT_DIR)/git-warp-time.fish $@
+$(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).fish: $(CARGO_TARGET)
+	cp -bf $(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).fish $@
 
-$(COMPLETIONS_OUT_DIR)/_$(_gwt).ps1: $(CARGO_TARGET)
+$(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME).ps1: $(CARGO_TARGET)
 	cp -bf $(COMPLETIONS_OUT_DIR)/_git-warp-time.ps1 $@
 
-$(COMPLETIONS_OUT_DIR)/_$(_gwt): $(CARGO_TARGET)
+$(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME): $(CARGO_TARGET)
 	cp -bf $(COMPLETIONS_OUT_DIR)/_git-warp-time $@
 
 $(CARGO_TARGET): $(git_warp_time_SOURCES)
@@ -88,14 +87,14 @@ clean-local:
 
 check-local: cargo-test check-version
 
-cargo-test: git-warp-time$(EXEEXT)
+cargo-test: $(PACKAGE_NAME)$(EXEEXT)
 	$(CARGO) test --locked
 
-check-version: git-warp-time$(EXEEXT) | .version
+check-version: $(PACKAGE_NAME)$(EXEEXT) | .version
 	./$< --version | grep -Ff $|
 
 installcheck-local:
-	./$(_gwt) version
+	./$(TRANSFORMED_PACKAGE_NAME) version
 
 .PHONY: lint
 lint: rustfmt clippy

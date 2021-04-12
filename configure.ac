@@ -86,6 +86,9 @@ fi
 AC_SUBST([ZSH_COMPLETION_DIR])
 AM_CONDITIONAL([ENABLE_ZSH_COMPLETION],[test "x$with_zsh_completion_dir" != "xno"])
 
+TRANSFORMED_PACKAGE_NAME="$(printf "$PACKAGE_NAME" | $SED -e "${program_transform_name//\$\$/\$}")"
+AC_SUBST([TRANSFORMED_PACKAGE_NAME])
+
 AC_CONFIG_FILES([Makefile])
 
 AC_ARG_PROGRAM
