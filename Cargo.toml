@@ -12,7 +12,6 @@ include = ["*.rs"]
 
 [[bin]]
 name = "git-warp-time"
-build = "build.rs"
 required-features = ["cli"]
 
 [dependencies]
