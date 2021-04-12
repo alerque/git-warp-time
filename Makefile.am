@@ -76,7 +76,7 @@ $(COMPLETIONS_OUT_DIR)/_$(_gwt): $(CARGO_TARGET)
 	cp -bf $(COMPLETIONS_OUT_DIR)/_git-warp-time $@
 
 $(CARGO_TARGET): $(git_warp_time_SOURCES)
-	cargo build $(CARGO_VERBOSE) $(CARGO_RELEASE_ARGS)
+	$(CARGO) build $(CARGO_VERBOSE) $(CARGO_RELEASE_ARGS)
 
 .version: $(shell $(AWK) '{print ".git/" $$2}' .git/HEAD 2>/dev/null ||:)
 	[ -e "$@" ] && mv "$@" "$@-prev" || touch "$@-prev"
@@ -84,12 +84,12 @@ $(CARGO_TARGET): $(git_warp_time_SOURCES)
 	$(CMP) -s "$@" "$@-prev" || autoreconf configure.ac --force
 
 clean-local:
-	cargo clean
+	$(CARGO) clean
 
 check-local: cargo-test check-version
 
 cargo-test: git-warp-time$(EXEEXT)
-	cargo test --locked
+	$(CARGO) test --locked
 
 check-version: git-warp-time$(EXEEXT) | .version
 	./$< --version | grep -Ff $|
@@ -106,7 +106,7 @@ rustfmt:
 
 .PHONY: clippy
 clippy:
-	cargo clippy -- -D warnings
+	$(CARGO) clippy -- -D warnings
 
 dist-hook:
 	cd $(distdir)
