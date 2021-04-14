@@ -75,10 +75,10 @@ $(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME).fish: $(RUST_BIN) | $(COMPLET
 	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).fish $@
 
 $(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME).ps1: $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
-	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/_git-warp-time.ps1 $@
+	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/_$(PACKAGE_NAME).ps1 $@
 
 $(COMPLETIONS_OUT_DIR)/_$(TRANSFORMED_PACKAGE_NAME): $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
-	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/_git-warp-time $@
+	cp -bf $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/_$(PACKAGE_NAME) $@
 
 $(_RUST_OUT) $(RUST_BIN): $(git_warp_time_SOURCES) $(EXTRA_git_warp_time_SOURCES)
 	cd $(top_srcdir)
@@ -97,12 +97,12 @@ clean-local:
 
 check-local: cargo-test check-version
 
-cargo-test: $(PACKAGE_NAME)
+cargo-test: $(PACKAGE_NAME)$(EXEEXT)
 	cd $(srcdir)
 	$(CARGO_ENV) $(CARGO) test --locked
 
-check-version: $(PACKAGE_NAME) | .version
-	./$< --version | grep -Ff $|
+check-version: $(PACKAGE_NAME)$(EXEEXT) | .version
+	./$< --version | $(GREP) -Ff $|
 
 installcheck-local:
 	./$(TRANSFORMED_PACKAGE_NAME) version
