@@ -21,9 +21,11 @@ AC_ARG_ENABLE([dependency-checks],
               AS_HELP_STRING([--disable-dependency-checks], [Disable dependency checks]))
 
 AS_IF([test "x$enable_dependency_checks" != "xno"], [
-	   AX_PROGVAR([jq])
 	   AX_PROGVAR([cargo])
+	   AX_PROGVAR([git])
+	   AX_PROGVAR([jq])
 	   AX_PROGVAR([rustc])
+	   AX_PROGVAR([xargs])
 ])
 
 # Add --enable-debug flag to change Rust build mode
