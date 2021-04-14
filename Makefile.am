@@ -91,6 +91,10 @@ $(_RUST_OUT) $(RUST_BIN): $(git_warp_time_SOURCES) $(EXTRA_git_warp_time_SOURCES
 	$(if $<,./build-aux/git-version-gen "$(srcdir)/.tarball-version",printf "$(VERSION)") > "$@"
 	$(CMP) -s "$@" "$@-prev" || autoreconf configure.ac --force
 
+
+dist-hook:
+	printf "$(VERSION)" > "$(distdir)/.tarball-version"
+
 clean-local:
 	cd $(top_srcdir)
 	$(CARGO_ENV) $(CARGO) clean
@@ -118,6 +122,3 @@ rustfmt:
 clippy:
 	cd $(srcdir)
 	$(CARGO_ENV) $(CARGO) clippy -- -D warnings
-
-dist-hook:
-	printf "$(VERSION)" > "$(distdir)/.tarball-version"
