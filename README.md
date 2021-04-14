@@ -23,9 +23,9 @@ For more usage see the `--help` output:
 
 ```console
 $ git-warp-time --help
-git-warp-time v0.4.1
-CLI utility that operates on the current working tree, resetting file modification
-timestamps to the date of the last commit in which they were modified
+git-warp-time v0.4.2
+CLI utility that operates on the current working tree, resetting file modification timestamps to the date of the
+last commit in which they were modified
 
 USAGE:
     git-warp-time [FLAGS] [paths]...
