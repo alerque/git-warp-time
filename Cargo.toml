@@ -8,6 +8,7 @@ readme = "README.md"
 homepage = "https://github.com/alerque/git-warp-time"
 repository = "https://github.com/alerque/git-warp-time"
 license = "GPL-3.0-only"
+build = "build.rs"
 include = ["*.rs"]
 
 [[bin]]
