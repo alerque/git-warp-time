@@ -36,8 +36,14 @@ clap_generate = { version = "3.0.0-beta.2", optional = true }
   features = [ "build", "git" ]
 
 [features]
-default = ["cli"]
+default = ["cli", "completions"]
+completions = ["bash", "elvish", "fish", "powershell", "zsh"]
 cli = ["clap", "clap_generate"]
+bash = []
+elvish = []
+fish = []
+powershell = []
+zsh = []
 
 [profile.release]
 lto = true
