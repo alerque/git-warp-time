@@ -1,9 +1,13 @@
+#[cfg(feature = "completions")]
 use clap::IntoApp;
-use clap_generate::generate_to;
-use clap_generate::generators::{Bash, Elvish, Fish, PowerShell, Zsh};
-use std::{env, fs, path};
+#[cfg(feature = "completions")]
+use clap_generate::{generate_to, generators};
+use std::env;
+#[cfg(feature = "completions")]
+use std::{fs, path};
 use vergen::vergen;
 
+#[cfg(feature = "completions")]
 include!("src/cli.rs");
 
 fn main() {
@@ -23,10 +27,12 @@ fn main() {
         *flags.git_mut().rerun_on_head_change_mut() = false;
         vergen(flags).expect("Unable to generate the cargo keys!");
     }
+    #[cfg(feature = "completions")]
     generate_shell_completions();
 }
 
 /// Generate shell completion files from CLI interface
+#[cfg(feature = "completions")]
 fn generate_shell_completions() {
     let out_dir = match env::var_os("OUT_DIR") {
         None => return,
@@ -40,9 +46,14 @@ fn generate_shell_completions() {
         .get_bin_name()
         .expect("Could not retrieve bin-name from generated Clap app");
     let mut app = Cli::into_app();
-    generate_to::<Bash, _, _>(&mut app, bin_name, &completions_dir);
-    generate_to::<Elvish, _, _>(&mut app, bin_name, &completions_dir);
-    generate_to::<Fish, _, _>(&mut app, bin_name, &completions_dir);
-    generate_to::<PowerShell, _, _>(&mut app, bin_name, &completions_dir);
-    generate_to::<Zsh, _, _>(&mut app, bin_name, &completions_dir);
+    #[cfg(feature = "bash")]
+    generate_to::<generators::Bash, _, _>(&mut app, bin_name, &completions_dir);
+    #[cfg(feature = "elvish")]
+    generate_to::<generators::Elvish, _, _>(&mut app, bin_name, &completions_dir);
+    #[cfg(feature = "fish")]
+    generate_to::<generators::Fish, _, _>(&mut app, bin_name, &completions_dir);
+    #[cfg(feature = "powershell")]
+    generate_to::<generators::PowerShell, _, _>(&mut app, bin_name, &completions_dir);
+    #[cfg(feature = "zsh")]
+    generate_to::<generators::Zsh, _, _>(&mut app, bin_name, &completions_dir);
 }
