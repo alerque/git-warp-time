@@ -1,6 +1,6 @@
 [package]
 name = "git-warp-time"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["Caleb Maclennan <caleb@alerque.com>"]
 edition = "2018"
 description = "Rust library and CLI utility to reset file timestamps to repo state"
