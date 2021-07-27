@@ -29,5 +29,3 @@ jobs:
           files: |
             git-warp-time-${{ env.VERSION }}.zip
             git-warp-time-${{ env.VERSION }}.tar.xz
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
