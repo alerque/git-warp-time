@@ -14,8 +14,8 @@ For use as a CLI utility, first check whether your distro has packages (e.g. Arc
 Run from inside any Git working directory after clone, after any checkout operation that switches branches, after rebases, etc.
 
 ```console
-$ git clone ‹project›
-$ cd ‹project›
+$ git clone ‹your project›
+$ cd ‹your project›
 $ git-warp-time
 ```
 
@@ -24,21 +24,21 @@ For more usage see the `--help` output:
 ```console
 $ git-warp-time --help
 git-warp-time v0.4.3
-CLI utility that operates on the current working tree, resetting file modification timestamps to the date of the
-last commit in which they were modified
+CLI utility that operates on the current working tree, resetting file modification timestamps to the
+date of the last commit in which they were modified
 
 USAGE:
-    git-warp-time [FLAGS] [paths]...
+    git-warp-time [OPTIONS] [PATHS]...
 
 ARGS:
-    <paths>...    Optional list of paths to operate on instead of scannning
+    <PATHS>...    Optional list of paths to operate on instead of scannning
 
-FLAGS:
+OPTIONS:
     -d, --dirty      Include locally modified files
-    -h, --help       Prints help information
+    -h, --help       Print help information
     -i, --ignored    Include ignored files
     -q, --quiet      Don't print anything about files touched or skipped
-    -V, --version    Prints version information
+    -V, --version    Print version information
 ```
 
 ## Library Usage
