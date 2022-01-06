@@ -1,25 +1,29 @@
 #[cfg(feature = "completions")]
 use clap::IntoApp;
 #[cfg(feature = "completions")]
-use clap_generate::{generate_to, generators};
+use clap_complete::generator::generate_to;
+#[cfg(feature = "completions")]
+use clap_complete::shells::{Bash, Elvish, Fish, PowerShell, Zsh};
 use std::env;
 #[cfg(feature = "completions")]
 use std::{fs, path};
-use vergen::vergen;
+use vergen::{vergen, Config};
 
 #[cfg(feature = "completions")]
 include!("src/cli.rs");
 
 fn main() {
-    let mut flags = vergen::Config::default();
+    let mut flags = Config::default();
     // If passed a version, use that instead of vergen's formatting
     if let Ok(val) = env::var("GWT_VERSION") {
         *flags.git_mut().semver_mut() = false;
         println!("cargo:rustc-env=VERGEN_GIT_SEMVER={}", val)
     };
+    // vergen(flags).expect("Unable to generate the cargo keys!");
     // Try to output flags based on Git repo, but if that fails turn off Git features and try again
     // with just cargo generated version info
     if vergen(flags).is_err() {
+        let mut flags = Config::default();
         *flags.git_mut().semver_mut() = false;
         *flags.git_mut().branch_mut() = false;
         *flags.git_mut().commit_timestamp_mut() = false;
@@ -47,13 +51,18 @@ fn generate_shell_completions() {
         .expect("Could not retrieve bin-name from generated Clap app");
     let mut app = Cli::into_app();
     #[cfg(feature = "bash")]
-    generate_to::<generators::Bash, _, _>(&mut app, bin_name, &completions_dir);
+    generate_to(Bash, &mut app, bin_name, &completions_dir)
+        .expect("Unable to generate bash completions");
     #[cfg(feature = "elvish")]
-    generate_to::<generators::Elvish, _, _>(&mut app, bin_name, &completions_dir);
+    generate_to(Elvish, &mut app, bin_name, &completions_dir)
+        .expect("Unable to generate elvish completions");
     #[cfg(feature = "fish")]
-    generate_to::<generators::Fish, _, _>(&mut app, bin_name, &completions_dir);
+    generate_to(Fish, &mut app, bin_name, &completions_dir)
+        .expect("Unable to generate fish completions");
     #[cfg(feature = "powershell")]
-    generate_to::<generators::PowerShell, _, _>(&mut app, bin_name, &completions_dir);
+    generate_to(PowerShell, &mut app, bin_name, &completions_dir)
+        .expect("Unable to generate powershell completions");
     #[cfg(feature = "zsh")]
-    generate_to::<generators::Zsh, _, _>(&mut app, bin_name, &completions_dir);
+    generate_to(Zsh, &mut app, bin_name, &completions_dir)
+        .expect("Unable to generate zsh completions");
 }
