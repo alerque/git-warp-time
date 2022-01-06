@@ -86,7 +86,7 @@ impl Options {
 pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
     let workdir_files = gather_workdir_files(&repo)?;
     let touchables: FileSet = match opts.paths {
-        Some(ref paths) => workdir_files.intersection(&paths).cloned().collect(),
+        Some(ref paths) => workdir_files.intersection(paths).cloned().collect(),
         None => {
             let candidates = gather_index_files(&repo, &opts);
             workdir_files.intersection(&candidates).cloned().collect()
