@@ -109,7 +109,7 @@ check-version: $(PACKAGE_NAME)$(EXEEXT) | .version
 	./$< --version | $(GREP) -Ff $|
 
 installcheck-local:
-	./$(TRANSFORMED_PACKAGE_NAME) version
+	./$(TRANSFORMED_PACKAGE_NAME) --version
 
 .PHONY: lint
 lint: rustfmt clippy
