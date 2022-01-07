@@ -3,11 +3,11 @@
 [![Rust Test Status](https://img.shields.io/github/workflow/status/alerque/git-warp-time/Rust%20Test?label=Rust+Test&logo=Rust)](https://github.com/alerque/git-warp-time/actions?workflow=Rust+Test)
 [![Rust Lint Status](https://img.shields.io/github/workflow/status/alerque/git-warp-time/Rust%20Lint?label=Rust+Lint&logo=Rust)](https://github.com/alerque/git-warp-time/actions?workflow=Rust+Lint)
 
-CLI utility (and Rust library) that rewinds the last modified timestamp in filesystem metadata to be the time of the last commit in which each file was modified.
+CLI utility (and Rust library) that resets the timestamps of files in a Git repository working directory to the time of the last commit which modified each file.
 
 For use as a Rust library, include in your `Cargo.toml` as documented on the [crates.io listing](https://crates.io/crates/git-warp-time) and use per [the API documentation](https://docs.rs/git-warp-time).
 
-For use as a CLI utility, first check whether your distro has packages (e.g. Arch Linux [AUR](https://aur.archlinux.org/packages/git-warp-time/)). Otherwise you can either install with `cargo install git-warp-time` for just a single binary or download the latest source tarball and use `./configure; make; make install` for a full installation that includes autcompletion for Zsh, Bash, Fish, Elvish, and PowerShell.
+For use as a CLI utility, first check whether your distro has packages (e.g. [Arch Linux](https://archlinux.org/packages/community/x86_64/git-warp-time/)). Otherwise you can either install just plain binary with `cargo install git-warp-time` or download the [latest](https://github.com/alerque/git-warp-time/releases/latest) source release and use `./configure; make; make install` for a full installation that includes autcompletion for Zsh, Bash, Fish, Elvish, and PowerShell.
 
 ## CLI usage
 
