@@ -11,7 +11,7 @@ docdir = $(datarootdir)/doc/$(TRANSFORMED_PACKAGE_NAME)
 dist_doc_DATA = README.md
 dist_license_DATA = LICENSE.md
 git_warp_time_SOURCES = Cargo.toml build.rs src/bin/git-warp-time.rs src/lib.rs src/cli.rs
-EXTRA_git_warp_time_SOURCES = Cargo.lock
+EXTRA_git_warp_time_SOURCES = Cargo.lock .version
 bin_PROGRAMS = git-warp-time
 EXTRA_DIST = build-aux/git-version-gen
 
@@ -48,6 +48,7 @@ CLEANFILES += $(nodist_zshcompletion_DATA)
 endif
 
 export GWT_VERSION = v$(VERSION)
+GIT_WARP_TIME := $(PACKAGE_NAME)$(EXEEXT)
 
 # Leave some tips for cargo to use so CLI knows where it is
 export CONFIGURE_PREFIX = $(prefix)/
@@ -62,8 +63,8 @@ cargo_verbose_1 = --verbose
 $(COMPLETIONS_OUT_DIR):
 	mkdir -p $@
 
-git-warp-time$(EXEEXT): $(RUST_BIN)
-	install $< $@
+$(GIT_WARP_TIME): $(RUST_BIN)
+	install $(RUST_BIN) $@
 
 $(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME): $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
 	install $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).bash $@
@@ -86,11 +87,19 @@ $(_RUST_OUT) $(RUST_BIN): $(git_warp_time_SOURCES) $(EXTRA_git_warp_time_SOURCES
 	$(CARGO_ENV) $(CARGO) build --quiet --message-format=json $(CARGO_RELEASE_ARGS) |
 		$(JQ) -sr 'map(select(.reason == "build-script-executed")) | last | .out_dir' > $(_RUST_OUT)
 
-.version: $(shell $(AWK) '{print ".git/" $$2}' .git/HEAD 2>/dev/null ||:)
-	[ -e "$@" ] && mv "$@" "$@-prev" || $(if $<,touch,cp "$(srcdir)/.tarball-version") "$@-prev"
-	$(if $<,./build-aux/git-version-gen "$(srcdir)/.tarball-version",printf "$(VERSION)") > "$@"
-	$(CMP) -s "$@" "$@-prev" || autoreconf configure.ac --force
+_BRANCH_REF != $(AWK) '{print ".git/" $$2}' .git/HEAD 2>/dev/null ||:
 
+.version: $(_BRANCH_REF)
+	@if [ -e "$(srcdir)/.tarball-version" ]; then \
+		printf "$(VERSION)" > $@; \
+	else \
+		touch "$@-prev"; \
+		if [ -e "$@" ]; then \
+			cp "$@" "$@-prev"; \
+		fi; \
+		./build-aux/git-version-gen "$(srcdir)/.tarball-version" > $@; \
+		cmp -s "$@" "$@-prev" || autoreconf configure.ac --force; \
+	fi
 
 dist-hook:
 	printf "$(VERSION)" > "$(distdir)/.tarball-version"
@@ -105,11 +114,11 @@ cargo-test: $(PACKAGE_NAME)$(EXEEXT)
 	cd $(srcdir)
 	$(CARGO_ENV) $(CARGO) test --locked
 
-check-version: $(PACKAGE_NAME)$(EXEEXT) | .version
-	./$< --version | $(GREP) -Ff $|
+check-version: $(GIT_WARP_TIME) | .version
+	./$(GIT_WARP_TIME) --version | $(GREP) -Ff .version
 
 installcheck-local:
-	./$(TRANSFORMED_PACKAGE_NAME) --version
+	./$(TRANSFORMED_PACKAGE_NAME)$(EXEEXT) --version
 
 .PHONY: lint
 lint: rustfmt clippy
