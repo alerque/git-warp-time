@@ -16,7 +16,7 @@ bin_PROGRAMS = git-warp-time
 EXTRA_DIST = build-aux/git-version-gen
 
 BUILT_SOURCES = .version
-CLEANFILES = $(BUILT_SOURCES) .version-prev $(bin_PROGRAMS) $(dist_scripts_SCRIPTS)
+CLEANFILES = $(bin_PROGRAMS) $(BUILT_SOURCES) .version-prev
 
 if DEBUG_RELEASE
 CARGO_RELEASE_ARGS = --all-features
