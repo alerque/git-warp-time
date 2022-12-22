@@ -4,6 +4,8 @@ use clap::CommandFactory;
 use clap_complete::generator::generate_to;
 #[cfg(feature = "completions")]
 use clap_complete::shells::{Bash, Elvish, Fish, PowerShell, Zsh};
+#[cfg(feature = "manpage")]
+use clap_mangen::Man;
 use std::env;
 #[cfg(feature = "completions")]
 use std::{fs, path};
@@ -32,7 +34,30 @@ fn main() {
         vergen(flags).expect("Unable to generate the cargo keys!");
     }
     #[cfg(feature = "completions")]
+    generate_manpage();
     generate_shell_completions();
+}
+
+/// Generate man page
+#[cfg(feature = "manpage")]
+fn generate_manpage() {
+    let out_dir = match env::var_os("OUT_DIR") {
+        None => return,
+        Some(out_dir) => out_dir,
+    };
+    let manpage_dir = path::Path::new(&out_dir);
+    fs::create_dir_all(manpage_dir).expect("Unable to create directory for generated manpages");
+    let app = Cli::command();
+    let bin_name: &str = app
+        .get_bin_name()
+        .expect("Could not retrieve bin-name from generated Clap app");
+    let app = Cli::command();
+    let man = Man::new(app);
+    let mut buffer: Vec<u8> = Default::default();
+    man.render(&mut buffer)
+        .expect("Unable to render man page to UTF-8 string");
+    fs::write(manpage_dir.join(format!("{}.1", bin_name)), buffer)
+        .expect("Unable to write manepage to file");
 }
 
 /// Generate shell completion files from CLI interface

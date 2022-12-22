@@ -8,6 +8,7 @@ ACLOCAL_AMFLAGS = -I build-aux
 licensedir = $(datarootdir)/licenses/$(TRANSFORMED_PACKAGE_NAME)
 docdir = $(datarootdir)/doc/$(TRANSFORMED_PACKAGE_NAME)
 
+dist_man_MANS = git-warp-time.1
 dist_doc_DATA = README.md
 dist_license_DATA = LICENSE.md
 git_warp_time_SOURCES = Cargo.toml build.rs src/bin/git-warp-time.rs src/lib.rs src/cli.rs
@@ -16,7 +17,7 @@ bin_PROGRAMS = git-warp-time
 EXTRA_DIST = build-aux/git-version-gen
 
 BUILT_SOURCES = .version
-CLEANFILES = $(bin_PROGRAMS) $(BUILT_SOURCES) .version-prev
+CLEANFILES = $(bin_PROGRAMS) $(dist_man_MANS) $(BUILT_SOURCES) .version-prev
 
 if DEBUG_RELEASE
 CARGO_RELEASE_ARGS = --all-features
@@ -65,6 +66,9 @@ $(COMPLETIONS_OUT_DIR):
 
 $(GIT_WARP_TIME): $(RUST_BIN)
 	$(INSTALL) $(RUST_BIN) $@
+
+$(PACKAGE_NAME).1: $(RUST_BIN)
+	$(INSTALL) -D $$(cat $(_RUST_OUT))/$@ $@
 
 $(COMPLETIONS_OUT_DIR)/$(TRANSFORMED_PACKAGE_NAME): $(RUST_BIN) | $(COMPLETIONS_OUT_DIR)
 	$(INSTALL) -D $$(cat $(_RUST_OUT))/$(COMPLETIONS_OUT_DIR)/$(PACKAGE_NAME).bash $@

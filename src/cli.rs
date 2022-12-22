@@ -3,7 +3,7 @@ use clap::Parser;
 /// CLI utility that operates on the current working tree, resetting file modification timestamps
 /// to the date of the last commit in which they were modified.
 #[derive(Parser, Debug)]
-#[clap(bin_name = "git-warp-time")]
+#[clap(author, bin_name = "git-warp-time")]
 pub struct Cli {
     /// Include locally modified files
     #[clap(short, long)]
