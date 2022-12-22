@@ -19,7 +19,7 @@ required-features = ["cli"]
 filetime = "0.2.19"
 
   [dependencies.clap]
-  version = "3.1.5"
+  version = "4.0.30"
   optional = true
   features = [ "derive", "wrap_help" ]
 
@@ -28,10 +28,10 @@ filetime = "0.2.19"
   default-features = false
 
 [build-dependencies]
-clap_complete = { version = "3.1.1", optional = true }
+clap_complete = { version = "4.0.6", optional = true }
 
   [build-dependencies.clap]
-  version = "3.1.5"
+  version = "4.0.30"
   optional = true
   features = [ "derive" ]
 

@@ -1,5 +1,5 @@
 #[cfg(feature = "completions")]
-use clap::IntoApp;
+use clap::CommandFactory;
 #[cfg(feature = "completions")]
 use clap_complete::generator::generate_to;
 #[cfg(feature = "completions")]
