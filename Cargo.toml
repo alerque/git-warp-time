@@ -36,13 +36,9 @@ clap_complete = { version = "4.0.6", optional = true }
   features = [ "derive" ]
 
   [build-dependencies.vergen]
-  version = "7.4.3"
+  version = "7.4.4"
   default-features = false
   features = [ "build", "git" ]
-
-[patch.crates-io.vergen]
-git = "https://github.com/alerque/vergen"
-branch = "bump-libgit2"
 
 [features]
 default = ["cli", "bash", "elvish", "fish", "powershell", "zsh"]

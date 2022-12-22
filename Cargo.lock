@@ -520,8 +520,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "vergen"
-version = "7.4.3"
-source = "git+https://github.com/alerque/vergen?branch=bump-libgit2#dd068ccde618401e1e3180601653f47e8b29f12e"
+version = "7.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efadd36bc6fde40c6048443897d69511a19161c0756cb704ed403f8dfd2b7d1c"
 dependencies = [
  "anyhow",
  "cfg-if",
