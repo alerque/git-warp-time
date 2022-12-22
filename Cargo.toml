@@ -16,7 +16,7 @@ name = "git-warp-time"
 required-features = ["cli"]
 
 [dependencies]
-filetime = "0.2.15"
+filetime = "0.2.19"
 
   [dependencies.clap]
   version = "3.1.5"
