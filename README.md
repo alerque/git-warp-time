@@ -60,12 +60,12 @@ println!("Actioned files: {:?}", files);
 Whenever you `git clone` a project or `git checkout` a different branch, Git will write all the relevant files to your system at the moment you run the Git command.
 Logical enough.
 Git is doing the right thing.
-For most use cases there is nothing wrong with the latest modification timestamp of a file to be the last time it's state changed on your disk.
+For most use cases there is nothing wrong with the latest modification timestamp of a file to be the last time its state changed on your disk.
 
 However many build systems rely on file modification timestamps to understand when something needs to be rebuilt.
 GNU Make is one example that relies entirely on timestamps, but there are many others.
 A few rely on checksums (e.g. SCons) and keep a separate database of ‘last seen’ file states, but since this requires extra storage most build systems use what is available.
-What is available without the build system storing it's own state is your file system's meta data.
+What is available without the build system storing its own state is your file system's meta data.
 
 The rub happens when you take advantage of Git's cheap branching model.
 Many workflows branch early and branch often.
@@ -94,8 +94,8 @@ Returning from a feature branch that messes with the template to the master bran
 This utility is a more elegant solution.
 Running `git warp-time` after any clone, checkout, rebase, or similar operation will reset all the timestamps to when they were actually last touched by a commit.
 
-The result is portable.
-I can clone the project on a new system and without any build state data except the existing output files the project known what it does and doesn't need to rebuild.
+The result is project portability.
+I can clone the project on a new system and without any build state data except the existing output files the project knows what it does and doesn't need to rebuild.
 
 ## When not to use this
 
