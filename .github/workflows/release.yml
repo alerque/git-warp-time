@@ -19,7 +19,7 @@ jobs:
           echo "VERSION=${GITHUB_REF#refs/*/v}" >> $GITHUB_ENV
           echo "${GITHUB_REF#refs/*/v}" > .tarball-version
           ./bootstrap.sh
-          ./configure --without-{bash,fish,zsh}-completion-dir --disable-dependency-checks
+          ./configure --without-{bash,fish,zsh}-completion-dir
       - name: Build source package
         run: |
           make dist
