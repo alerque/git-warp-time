@@ -26,11 +26,7 @@ fn main() {
     // with just cargo generated version info
     if vergen(flags).is_err() {
         let mut flags = Config::default();
-        *flags.git_mut().semver_mut() = false;
-        *flags.git_mut().branch_mut() = false;
-        *flags.git_mut().commit_timestamp_mut() = false;
-        *flags.git_mut().sha_mut() = false;
-        *flags.git_mut().rerun_on_head_change_mut() = false;
+        *flags.git_mut().enabled_mut() = false;
         vergen(flags).expect("Unable to generate the cargo keys!");
     }
     #[cfg(feature = "completions")]
