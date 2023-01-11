@@ -29,8 +29,9 @@ fn main() {
         *flags.git_mut().enabled_mut() = false;
         vergen(flags).expect("Unable to generate the cargo keys!");
     }
-    #[cfg(feature = "completions")]
+    #[cfg(feature = "manpage")]
     generate_manpage();
+    #[cfg(feature = "completions")]
     generate_shell_completions();
 }
 
