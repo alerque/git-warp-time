@@ -120,19 +120,19 @@ fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
                 if opts.dirty {
                     candidates.insert(path.to_string());
                 } else if opts.verbose {
-                    println!("Ignored file with staged modifications: {}", path);
+                    println!("Ignored file with staged modifications: {path}");
                 }
             }
             git2::Status::WT_MODIFIED => {
                 if opts.dirty {
                     candidates.insert(path.to_string());
                 } else if opts.verbose {
-                    println!("Ignored file with local modifications: {}", path);
+                    println!("Ignored file with local modifications: {path}");
                 }
             }
             git_state => {
                 if opts.verbose {
-                    println!("Ignored file in state {:?}: {}", git_state, path);
+                    println!("Ignored file in state {git_state:?}: {path}");
                 }
             }
         }
@@ -221,7 +221,7 @@ fn touch(repo: &Repository, touchables: HashSet<String>, opts: &Options) -> Resu
         if file_mtime != commit_time {
             filetime::set_file_mtime(path, commit_time)?;
             if opts.verbose {
-                println!("Rewound the clock: {}", path);
+                println!("Rewound the clock: {path}");
             }
             touched.insert((*path).to_string());
         }

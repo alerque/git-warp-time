@@ -19,7 +19,7 @@ fn main() {
     // If passed a version, use that instead of vergen's formatting
     if let Ok(val) = env::var("GWT_VERSION") {
         *flags.git_mut().semver_mut() = false;
-        println!("cargo:rustc-env=VERGEN_GIT_SEMVER={}", val)
+        println!("cargo:rustc-env=VERGEN_GIT_SEMVER={val}")
     };
     // vergen(flags).expect("Unable to generate the cargo keys!");
     // Try to output flags based on Git repo, but if that fails turn off Git features and try again
@@ -53,7 +53,7 @@ fn generate_manpage() {
     let mut buffer: Vec<u8> = Default::default();
     man.render(&mut buffer)
         .expect("Unable to render man page to UTF-8 string");
-    fs::write(manpage_dir.join(format!("{}.1", bin_name)), buffer)
+    fs::write(manpage_dir.join(format!("{bin_name}.1")), buffer)
         .expect("Unable to write manepage to file");
 }
 
