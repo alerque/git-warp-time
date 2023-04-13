@@ -24,7 +24,7 @@ filetime = "0.2"
   features = [ "derive", "wrap_help" ]
 
   [dependencies.git2]
-  version = "0.16"
+  version = "0.17"
   default-features = false
 
 [build-dependencies]
@@ -43,9 +43,9 @@ filetime = "0.2"
   features = [ "derive" ]
 
   [build-dependencies.vergen]
-  version = "7.4"
+  version = "8.1"
   default-features = false
-  features = [ "build", "git" ]
+  features = [ "build", "cargo", "git", "gitoxide" ]
 
 [features]
 default = ["cli", "bash", "elvish", "fish", "manpage", "powershell", "zsh"]

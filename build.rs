@@ -9,26 +9,21 @@ use clap_mangen::Man;
 use std::env;
 #[cfg(feature = "completions")]
 use std::{fs, path};
-use vergen::{vergen, Config};
+use vergen::EmitBuilder;
 
 #[cfg(feature = "completions")]
 include!("src/cli.rs");
 
 fn main() {
-    let mut flags = Config::default();
-    // If passed a version, use that instead of vergen's formatting
+    let mut builder = EmitBuilder::builder();
+    // If passed a version from automake, use that instead of vergen's formatting
     if let Ok(val) = env::var("GWT_VERSION") {
-        *flags.git_mut().semver_mut() = false;
-        println!("cargo:rustc-env=VERGEN_GIT_SEMVER={val}")
+        println!("cargo:rustc-env=VERGEN_GIT_DESCRIBE={val}")
+    } else {
+        builder = *builder.git_describe(true, true, None);
     };
-    // vergen(flags).expect("Unable to generate the cargo keys!");
-    // Try to output flags based on Git repo, but if that fails turn off Git features and try again
-    // with just cargo generated version info
-    if vergen(flags).is_err() {
-        let mut flags = Config::default();
-        *flags.git_mut().enabled_mut() = false;
-        vergen(flags).expect("Unable to generate the cargo keys!");
-    }
+
+    builder.emit().expect("Unable to generate the cargo keys!");
     #[cfg(feature = "manpage")]
     generate_manpage();
     #[cfg(feature = "completions")]
