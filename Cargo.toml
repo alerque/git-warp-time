@@ -19,7 +19,7 @@ required-features = ["cli"]
 filetime = "0.2"
 
   [dependencies.clap]
-  version = "4.2"
+  version = "4.3"
   optional = true
   features = [ "derive", "wrap_help" ]
 
@@ -30,7 +30,7 @@ filetime = "0.2"
 [build-dependencies]
 
   [build-dependencies.clap_complete]
-  version = "4.2"
+  version = "4.3"
   optional = true
 
   [build-dependencies.clap_mangen]
@@ -38,12 +38,12 @@ filetime = "0.2"
   optional = true
 
   [build-dependencies.clap]
-  version = "4.2"
+  version = "4.3"
   optional = true
   features = [ "derive" ]
 
   [build-dependencies.vergen]
-  version = "8.1"
+  version = "8.2"
   default-features = false
   features = [ "build", "cargo", "git", "gitoxide" ]
 
