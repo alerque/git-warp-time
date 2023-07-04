@@ -17,7 +17,9 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v4
       - name: Cache Nix dependencies
         uses: DeterminateSystems/magic-nix-cache-action@v2
-      - name: Check flake
+      - name: Check Nix flake inputs
+        uses: DeterminateSystems/flake-checker-action@v4
+      - name: Check flake evaluation
         run: nix flake check --impure
       - name: Build flake
         run: nix build
