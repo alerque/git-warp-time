@@ -12,7 +12,7 @@
       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
     in
     {
-      overlay = final: prev: {
+      overlays.default = final: prev: {
         "${cargoToml.package.name}" = final.callPackage ./. { inherit naersk; };
       };
       packages = forAllSystems (system:
@@ -20,7 +20,7 @@
           pkgs = import nixpkgs {
             inherit system;
             overlays = [
-              self.overlay
+              self.overlays.default
             ];
           };
         in
@@ -29,13 +29,13 @@
         });
       defaultPackage = forAllSystems (system: (import nixpkgs {
         inherit system;
-        overlays = [ self.overlay ];
+        overlays = [ self.overlays.default ];
       })."${cargoToml.package.name}");
       devShell = forAllSystems (system:
         let
           pkgs = import nixpkgs {
             inherit system;
-            overlays = [ self.overlay ];
+            overlays = [ self.overlays.default ];
           };
         in
         pkgs.mkShell {
