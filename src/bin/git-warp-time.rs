@@ -12,7 +12,7 @@ fn main() -> git_warp_time::Result<()> {
     let repo = get_repo().unwrap();
     let mut opts = git_warp_time::Options::new()
         .dirty(matches.contains_id("dirty"))
-        .ignored(matches.contains_id("ignore"))
+        .ignored(matches.contains_id("ignored"))
         .verbose(!matches.contains_id("quiet"));
     if matches.contains_id("paths") {
         let mut paths: FileSet = FileSet::new();
