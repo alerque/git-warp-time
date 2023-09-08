@@ -17,6 +17,6 @@ pub struct Cli {
     #[clap(short, long)]
     pub quiet: bool,
 
-    /// Optional list of paths to operate on instead of scannning
+    /// Optional list of paths to operate on instead of scannning (relative to repository root)
     pub paths: Vec<String>,
 }
