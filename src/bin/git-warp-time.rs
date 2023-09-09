@@ -4,6 +4,9 @@ use git_warp_time::cli::Cli;
 use git_warp_time::FileSet;
 use git_warp_time::{get_repo, reset_mtime};
 
+use std::io::{Error, ErrorKind};
+use std::path::Path;
+
 fn main() -> git_warp_time::Result<()> {
     let version = option_env!("VERGEN_GIT_DESCRIBE").unwrap_or_else(|| env!("CARGO_PKG_VERSION"));
     let app = Cli::command().version(version);
@@ -17,6 +20,10 @@ fn main() -> git_warp_time::Result<()> {
     if matches.contains_id("paths") {
         let mut paths: FileSet = FileSet::new();
         for path in positionals.unwrap() {
+            if !Path::new(path).exists() {
+                let path_error = format!("Path {path} does not exist");
+                return Err(Box::new(Error::new(ErrorKind::NotFound, path_error)));
+            }
             paths.insert(path.to_string());
         }
         opts = opts.paths(Some(paths));
