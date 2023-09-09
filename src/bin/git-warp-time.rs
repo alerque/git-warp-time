@@ -2,7 +2,7 @@ use clap::CommandFactory;
 
 use git_warp_time::cli::Cli;
 use git_warp_time::FileSet;
-use git_warp_time::{get_repo, reset_mtime};
+use git_warp_time::{get_repo, reset_mtime, resolve_repo_path};
 
 use std::io::{Error, ErrorKind};
 use std::path::Path;
@@ -24,7 +24,8 @@ fn main() -> git_warp_time::Result<()> {
                 let path_error = format!("Path {path} does not exist");
                 return Err(Box::new(Error::new(ErrorKind::NotFound, path_error)));
             }
-            paths.insert(path.to_string());
+            let path = resolve_repo_path(&repo, path)?;
+            paths.insert(path);
         }
         opts = opts.paths(Some(paths));
     }

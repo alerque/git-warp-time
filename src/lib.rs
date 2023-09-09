@@ -1,8 +1,9 @@
 use filetime::FileTime;
 use git2::Repository;
 use std::collections::HashSet;
-use std::path::Path;
-use std::{error, fs, result};
+use std::io::{Error, ErrorKind};
+use std::path::{Path, PathBuf};
+use std::{env, error, fs, result};
 
 #[cfg(feature = "cli")]
 pub mod cli;
@@ -86,7 +87,18 @@ impl Options {
 pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
     let workdir_files = gather_workdir_files(&repo)?;
     let touchables: FileSet = match opts.paths {
-        Some(ref paths) => workdir_files.intersection(paths).cloned().collect(),
+        Some(ref paths) => {
+            let not_tracked = paths.difference(&workdir_files);
+            if not_tracked.clone().count() > 0 {
+                let tracking_error =
+                    format!("Paths {not_tracked:?} are not tracked in the repository");
+                return Err(Box::new(Error::new(
+                    ErrorKind::InvalidInput,
+                    tracking_error,
+                )));
+            }
+            workdir_files.intersection(paths).cloned().collect()
+        }
         None => {
             let candidates = gather_index_files(&repo, &opts);
             workdir_files.intersection(&candidates).cloned().collect()
@@ -99,6 +111,23 @@ pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
 pub fn get_repo() -> Result<Repository> {
     Ok(Repository::open_from_env()?)
+}
+
+/// Convert a path relative to the current working directory to be relative to the repository root
+pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
+    let cwd = env::current_dir()?;
+    let root = repo
+        .workdir()
+        .ok_or("No Git working directory found")?
+        .to_path_buf();
+    let prefix = cwd.strip_prefix(&root).unwrap();
+    let abs_input_path = if Path::new(&path).is_absolute() {
+        PathBuf::from(path.clone())
+    } else {
+        prefix.join(path.clone())
+    };
+    let resolved_path = abs_input_path.to_string_lossy().to_string();
+    Ok(resolved_path)
 }
 
 fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
