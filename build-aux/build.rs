@@ -12,7 +12,7 @@ use std::{fs, path};
 use vergen::EmitBuilder;
 
 #[cfg(feature = "completions")]
-include!("src/cli.rs");
+include!("../src/cli.rs");
 
 fn main() {
     let mut builder = EmitBuilder::builder();
