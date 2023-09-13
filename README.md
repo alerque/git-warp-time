@@ -3,7 +3,7 @@
 [![Rust Test Status](https://img.shields.io/github/actions/workflow/status/alerque/git-warp-time/rust_test.yml?branch=master&label=Rust+Test&logo=Rust)](https://github.com/alerque/git-warp-time/actions?workflow=Rust+Test)
 [![Rust Lint Status](https://img.shields.io/github/actions/workflow/status/alerque/git-warp-time/rust_lint.yml?branch=master&label=Rust+Lint&logo=Rust)](https://github.com/alerque/git-warp-time/actions?workflow=Rust+Lint)
 
-CLI utility (and Rust library) that resets the timestamps of files in a Git repository working directory to the time of the last commit which modified each file.
+CLI utility (and Rust library) that resets the timestamps of files in a Git repository working directory to the exact timestamp of the last commit which modified each file.
 
 For use as a Rust library, include in your `Cargo.toml` as documented on the [crates.io listing](https://crates.io/crates/git-warp-time) and use per [the API documentation](https://docs.rs/git-warp-time).
 
@@ -23,19 +23,19 @@ For more usage see the `--help` output:
 
 ```console
 $ git-warp-time --help
-CLI utility that operates on the current working tree, resetting file
-modification timestamps to the date of the last commit in which they were
-modified
+CLI utility that resets the timestamps of files in a Git repository working directory to the exact
+timestamp of the last commit which modified each file
 
 Usage: git-warp-time [OPTIONS] [PATHS]...
 
 Arguments:
-  [PATHS]...  Optional list of paths to operate on instead of scannning
+  [PATHS]...  Optional list of paths to operate on instead of default which is all files tracked by
+              Git
 
 Options:
-  -d, --dirty    Include locally modified files
-  -i, --ignored  Include ignored files
-  -q, --quiet    Don't print anything about files touched or skipped
+  -d, --dirty    Include files tracked by Git but modifications in the working tee
+  -i, --ignored  Include files tracked by Git but also ignored
+  -q, --quiet    Don't print any output about files touched or skipped
   -h, --help     Print help
   -V, --version  Print version
 ```
