@@ -19,10 +19,7 @@ AC_DEFUN_ONCE([AX_RUST_BOILERPLATE], [
 
         AC_MSG_NOTICE([checking for tools used by automake to build Rust projects])
         AM_COND_IF([DEPENDENCY_CHECKS], [
-                AC_PROG_AWK
-                AC_PROG_GREP
                 AC_PROG_INSTALL
-                AC_PROG_SED
                 AX_PROGVAR([cargo])
                 AX_PROGVAR([jq])
                 AX_PROGVAR([rustc])
