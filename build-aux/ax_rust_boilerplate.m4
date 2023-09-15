@@ -1,10 +1,6 @@
 AC_DEFUN_ONCE([AX_RUST_BOILERPLATE], [
 
-        TRANSFORMED_PACKAGE_NAME="$(printf "$PACKAGE_NAME" | $SED -e "${program_transform_name//\$\$/\$}")"
-        AC_SUBST([TRANSFORMED_PACKAGE_NAME])
-
-        PACKAGE_VAR="$(printf "$PACKAGE_NAME" | $SED -e "s/-/_/g")"
-        AC_SUBST([PACKAGE_VAR])
+        AX_TRANSFORM_PACKAGE_NAME
 
         AC_ARG_ENABLE(debug,
                 AS_HELP_STRING([--enable-debug],
