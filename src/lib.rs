@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use filetime::FileTime;
 use git2::Repository;
 use std::collections::HashSet;
