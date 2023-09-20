@@ -15,6 +15,20 @@ include = ["*.rs"]
 name = "git-warp-time"
 required-features = ["cli"]
 
+[features]
+default = ["cli", "bash", "elvish", "fish", "manpage", "powershell", "zsh"]
+completions = ["cli", "clap_complete"]
+cli = ["clap"]
+bash = ["completions"]
+elvish = ["completions"]
+fish = ["completions"]
+manpage = ["clap_mangen"]
+powershell = ["completions"]
+zsh = ["completions"]
+
+[profile.release]
+lto = true
+
 [dependencies]
 filetime = "0.2"
 
@@ -46,17 +60,3 @@ filetime = "0.2"
   version = "8.2"
   default-features = false
   features = [ "build", "cargo", "git", "gitoxide" ]
-
-[features]
-default = ["cli", "bash", "elvish", "fish", "manpage", "powershell", "zsh"]
-completions = ["cli", "clap_complete"]
-cli = ["clap"]
-bash = ["completions"]
-elvish = ["completions"]
-fish = ["completions"]
-manpage = ["clap_mangen"]
-powershell = ["completions"]
-zsh = ["completions"]
-
-[profile.release]
-lto = true
