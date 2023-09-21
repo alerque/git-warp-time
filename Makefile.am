@@ -20,4 +20,4 @@ BUILT_SOURCES =
 
 CLEANFILES =
 
-include $(top_srcdir)/build-aux/rust_boilerplate.am
+include $(top_srcdir)/build-aux/rust_boilerplate.mk
