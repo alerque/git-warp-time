@@ -12,12 +12,12 @@ use std::{fs, path};
 use vergen::EmitBuilder;
 
 #[cfg(feature = "completions")]
-include!("src/cli.rs");
+include!("../src/cli.rs");
 
 fn main() {
     let mut builder = EmitBuilder::builder();
     // If passed a version from automake, use that instead of vergen's formatting
-    if let Ok(val) = env::var("GWT_VERSION") {
+    if let Ok(val) = env::var("VERSION_FROM_AUTOTOOLS") {
         println!("cargo:rustc-env=VERGEN_GIT_DESCRIBE={val}")
     } else {
         builder = *builder.git_describe(true, true, None);
