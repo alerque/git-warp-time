@@ -45,11 +45,10 @@ Options:
 ```rust
 use git_warp_time::{get_repo, reset_mtime};
 let repo = get_repo().unwrap();
-let paths = git_warp_time::FileSet::new()
-	.insert("foo.txt");
-let opts = git_warp_time::Options::new()
-	.verbose(true).
-	.paths(paths);
+let mut paths = git_warp_time::FileSet::new();
+paths.insert("foo.txt".to_string());
+let mut opts = git_warp_time::Options::new();
+opts.verbose(true).paths(Some(paths));
 let files = reset_mtime(repo, opts).unwrap();
 println!("Actioned files: {:?}", files);
 ```
