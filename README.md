@@ -42,15 +42,28 @@ Options:
 
 ## Library Usage
 
+In your `Cargo.toml` file.
+
+```toml
+[dependencies]
+git-warp-time = "0.5"
+```
+
+Then use the crate functions and types in your project something like this:
+
 ```rust
 use git_warp_time::{get_repo, reset_mtime};
-let repo = get_repo().unwrap();
-let mut paths = git_warp_time::FileSet::new();
-paths.insert("foo.txt".to_string());
-let mut opts = git_warp_time::Options::new();
-opts.verbose(true).paths(Some(paths));
-let files = reset_mtime(repo, opts).unwrap();
-println!("Actioned files: {:?}", files);
+use git_warp_time::{FileSet, Options};
+
+fn main() {
+    let repo = get_repo().unwrap();
+    let mut paths = FileSet::new();
+    paths.insert("foo.txt".to_string());
+    let mut opts = Options::new();
+    opts.verbose(true).paths(Some(paths));
+    let files = reset_mtime(repo, opts).unwrap();
+    println!("Actioned files: {:?}", files);
+}
 ```
 
 # The story
