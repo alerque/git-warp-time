@@ -1,7 +1,8 @@
-#![doc = include_str!("../README.md")]
+// #![doc = include_str!("../README.md")]
 
 use filetime::FileTime;
 use git2::Repository as Git2Repository;
+use gix::discover::repository;
 use gix::Repository;
 use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
@@ -103,7 +104,7 @@ pub fn reset_mtime(repo: (Git2Repository, Repository), opts: Options) -> Result<
             workdir_files.intersection(paths).cloned().collect()
         }
         None => {
-            let candidates = gather_index_files(&repo.0, &opts);
+            let candidates = gather_index_files(&repo.1, &opts);
             workdir_files.intersection(&candidates).cloned().collect()
         }
     };
@@ -134,42 +135,44 @@ pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
     Ok(resolved_path)
 }
 
-fn gather_index_files(repo: &Git2Repository, opts: &Options) -> FileSet {
+fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
     let mut candidates = FileSet::new();
-    let mut status_options = git2::StatusOptions::new();
-    status_options
-        .include_unmodified(true)
-        .exclude_submodules(true)
-        .include_ignored(opts.ignored)
-        .show(git2::StatusShow::IndexAndWorkdir);
-    let statuses = repo.statuses(Some(&mut status_options)).unwrap();
-    for entry in statuses.iter() {
-        let path = entry.path().unwrap();
-        match entry.status() {
-            git2::Status::CURRENT => {
-                candidates.insert(path.to_string());
-            }
-            git2::Status::INDEX_MODIFIED => {
-                if opts.dirty {
-                    candidates.insert(path.to_string());
-                } else if opts.verbose {
-                    println!("Ignored file with staged modifications: {path}");
-                }
-            }
-            git2::Status::WT_MODIFIED => {
-                if opts.dirty {
-                    candidates.insert(path.to_string());
-                } else if opts.verbose {
-                    println!("Ignored file with local modifications: {path}");
-                }
-            }
-            git_state => {
-                if opts.verbose {
-                    println!("Ignored file in state {git_state:?}: {path}");
-                }
-            }
-        }
-    }
+    // let mut options = gix::config::file::includes::Options::new();
+    dbg!(options);
+    // let mut status_options = git2::StatusOptions::new();
+    // status_options
+    //     .include_unmodified(true)
+    //     .exclude_submodules(true)
+    //     .include_ignored(opts.ignored)
+    //     .show(git2::StatusShow::IndexAndWorkdir);
+    // let statuses = repo.statuses(Some(&mut status_options)).unwrap();
+    // for entry in statuses.iter() {
+    //     let path = entry.path().unwrap();
+    //     match entry.status() {
+    //         git2::Status::CURRENT => {
+    //             candidates.insert(path.to_string());
+    //         }
+    //         git2::Status::INDEX_MODIFIED => {
+    //             if opts.dirty {
+    //                 candidates.insert(path.to_string());
+    //             } else if opts.verbose {
+    //                 println!("Ignored file with staged modifications: {path}");
+    //             }
+    //         }
+    //         git2::Status::WT_MODIFIED => {
+    //             if opts.dirty {
+    //                 candidates.insert(path.to_string());
+    //             } else if opts.verbose {
+    //                 println!("Ignored file with local modifications: {path}");
+    //             }
+    //         }
+    //         git_state => {
+    //             if opts.verbose {
+    //                 println!("Ignored file in state {git_state:?}: {path}");
+    //             }
+    //         }
+    //     }
+    // }
     candidates
 }
 
