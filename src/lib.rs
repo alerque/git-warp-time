@@ -6,7 +6,7 @@ use gix::Repository;
 use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
-use std::{env, error, fs, result};
+use std::{error, fs, result};
 
 #[cfg(feature = "cli")]
 pub mod cli;
@@ -119,16 +119,15 @@ pub fn get_repo() -> Result<(Git2Repository, Repository)> {
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
-pub fn resolve_repo_path(repo: &Git2Repository, path: &String) -> Result<String> {
-    let cwd = env::current_dir()?;
-    let root = repo
-        .workdir()
-        .ok_or("No Git working directory found")?
-        .to_path_buf();
-    let prefix = cwd.strip_prefix(&root).unwrap();
+pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
     let abs_input_path = if Path::new(&path).is_absolute() {
         PathBuf::from(path.clone())
     } else {
+        let prefix = repo.prefix()?;
+        let prefix = match prefix {
+            Some(path) => path,
+            None => Path::new(""),
+        };
         prefix.join(path.clone())
     };
     let resolved_path = abs_input_path.to_string_lossy().to_string();

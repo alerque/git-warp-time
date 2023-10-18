@@ -24,7 +24,7 @@ fn main() -> git_warp_time::Result<()> {
                 let path_error = format!("Path {path} does not exist");
                 return Err(Box::new(Error::new(ErrorKind::NotFound, path_error)));
             }
-            let path = resolve_repo_path(&repo.0, path)?;
+            let path = resolve_repo_path(&repo.1, path)?;
             paths.insert(path);
         }
         opts = opts.paths(Some(paths));
