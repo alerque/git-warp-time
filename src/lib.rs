@@ -2,8 +2,7 @@
 
 use filetime::FileTime;
 use git2::Repository as Git2Repository;
-use gix::repository::{discovery, find, locate};
-use gix::Repository as Repository;
+use gix::Repository;
 use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
@@ -113,10 +112,10 @@ pub fn reset_mtime(repo: Git2Repository, opts: Options) -> Result<FileSet> {
 }
 
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
-pub fn get_repo() -> Result<((Git2Repository, GixRepository))> {
+pub fn get_repo() -> Result<(Git2Repository, Repository)> {
     let git2repo = Git2Repository::open_from_env()?;
-    let gixrepo = Gi
-    Ok((git2repo, gixrepo))
+    let repo = gix::discover(".")?;
+    Ok((git2repo, repo))
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
