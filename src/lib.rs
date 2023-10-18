@@ -1,7 +1,9 @@
 #![doc = include_str!("../README.md")]
 
 use filetime::FileTime;
-use git2::Repository;
+use git2::Repository as Git2Repository;
+use gix::repository::{discovery, find, locate};
+use gix::Repository as Repository;
 use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
@@ -86,7 +88,7 @@ impl Options {
 /// Iterate over either the explicit file list or the working directory files, filter out any that
 /// have local modifications, are ignored by Git, or are in submodules and reset the file metadata
 /// mtime to the commit date of the last commit that affected the file in question.
-pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
+pub fn reset_mtime(repo: Git2Repository, opts: Options) -> Result<FileSet> {
     let workdir_files = gather_workdir_files(&repo)?;
     let touchables: FileSet = match opts.paths {
         Some(ref paths) => {
@@ -111,12 +113,14 @@ pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
 }
 
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
-pub fn get_repo() -> Result<Repository> {
-    Ok(Repository::open_from_env()?)
+pub fn get_repo() -> Result<((Git2Repository, GixRepository))> {
+    let git2repo = Git2Repository::open_from_env()?;
+    let gixrepo = Gi
+    Ok((git2repo, gixrepo))
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
-pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
+pub fn resolve_repo_path(repo: &Git2Repository, path: &String) -> Result<String> {
     let cwd = env::current_dir()?;
     let root = repo
         .workdir()
@@ -132,7 +136,7 @@ pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
     Ok(resolved_path)
 }
 
-fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
+fn gather_index_files(repo: &Git2Repository, opts: &Options) -> FileSet {
     let mut candidates = FileSet::new();
     let mut status_options = git2::StatusOptions::new();
     status_options
@@ -171,7 +175,7 @@ fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
     candidates
 }
 
-fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
+fn gather_workdir_files(repo: &Git2Repository) -> Result<FileSet> {
     let mut workdir_files = FileSet::new();
     let head = repo.head()?;
     let tree = head.peel_to_tree()?;
@@ -188,7 +192,7 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
-fn touch(repo: &Repository, touchables: HashSet<String>, opts: &Options) -> Result<FileSet> {
+fn touch(repo: &Git2Repository, touchables: HashSet<String>, opts: &Options) -> Result<FileSet> {
     let mut touched = FileSet::new();
     for path in touchables.iter() {
         let pathbuf = Path::new(path).to_path_buf();

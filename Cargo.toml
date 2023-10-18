@@ -42,6 +42,9 @@ filetime = "0.2"
   version = "0.18"
   default-features = false
 
+  [dependencies.gix]
+  version = "0.55"
+
 [build-dependencies]
 
   [build-dependencies.clap_complete]
