@@ -87,8 +87,8 @@ impl Options {
 /// Iterate over either the explicit file list or the working directory files, filter out any that
 /// have local modifications, are ignored by Git, or are in submodules and reset the file metadata
 /// mtime to the commit date of the last commit that affected the file in question.
-pub fn reset_mtime(repo: Git2Repository, opts: Options) -> Result<FileSet> {
-    let workdir_files = gather_workdir_files(&repo)?;
+pub fn reset_mtime(repo: (Git2Repository, Repository), opts: Options) -> Result<FileSet> {
+    let workdir_files = gather_workdir_files(&repo.0)?;
     let touchables: FileSet = match opts.paths {
         Some(ref paths) => {
             let not_tracked = paths.difference(&workdir_files);
@@ -103,11 +103,11 @@ pub fn reset_mtime(repo: Git2Repository, opts: Options) -> Result<FileSet> {
             workdir_files.intersection(paths).cloned().collect()
         }
         None => {
-            let candidates = gather_index_files(&repo, &opts);
+            let candidates = gather_index_files(&repo.0, &opts);
             workdir_files.intersection(&candidates).cloned().collect()
         }
     };
-    let touched = touch(&repo, touchables, &opts)?;
+    let touched = touch(&repo.0, touchables, &opts)?;
     Ok(touched)
 }
 
