@@ -38,8 +38,9 @@ filetime = "0.2"
   optional = true
   features = [ "derive", "wrap_help" ]
 
-  [dependencies.gix]
-  version = "0.54"
+  [dependencies.git2]
+  version = "0.18"
+  default-features = false
 
 [build-dependencies]
 

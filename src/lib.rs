@@ -1,12 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 use filetime::FileTime;
-use gix::easy;
-use gix::easy::options::DiffOptions;
-use gix::odb::pack;
-use gix::reference::ReferenceKind;
-use gix::repository::{discovery, find, locate};
-use gix::Repository;
+use git2::Repository;
 use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
@@ -96,9 +91,9 @@ pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
     let touchables: FileSet = match opts.paths {
         Some(ref paths) => {
             let not_tracked = paths.difference(&workdir_files);
-            if !not_tracked.is_empty() {
+            if not_tracked.clone().count() > 0 {
                 let tracking_error =
-                    format!("Paths {:?} are not tracked in the repository", not_tracked);
+                    format!("Paths {not_tracked:?} are not tracked in the repository");
                 return Err(Box::new(Error::new(
                     ErrorKind::InvalidInput,
                     tracking_error,
@@ -107,7 +102,7 @@ pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
             workdir_files.intersection(paths).cloned().collect()
         }
         None => {
-            let candidates = gather_index_files(&repo, &opts)?;
+            let candidates = gather_index_files(&repo, &opts);
             workdir_files.intersection(&candidates).cloned().collect()
         }
     };
@@ -117,16 +112,17 @@ pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
 
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
 pub fn get_repo() -> Result<Repository> {
-    let repo_path = find::repo()?;
-    let repo = discovery::Repository::discover(&repo_path)?;
-    Ok(repo.into())
+    Ok(Repository::open_from_env()?)
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
 pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
     let cwd = env::current_dir()?;
-    let repo_path = repo.workdir().ok_or("No Git working directory found")?;
-    let prefix = cwd.strip_prefix(&repo_path).unwrap();
+    let root = repo
+        .workdir()
+        .ok_or("No Git working directory found")?
+        .to_path_buf();
+    let prefix = cwd.strip_prefix(&root).unwrap();
     let abs_input_path = if Path::new(&path).is_absolute() {
         PathBuf::from(path.clone())
     } else {
@@ -138,43 +134,36 @@ pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
 
 fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
     let mut candidates = FileSet::new();
-    let odb = repo.odb.into_object_by_path();
-    let head_reference = repo.refs.read_reference(ReferenceKind::Head).unwrap();
-    let head_commit = gix::easy::peel::peel_commit(&head_reference.target().into())?;
-    let head_tree = head_commit.tree(&repo)?;
-
-    let mut options = DiffOptions::new();
-    options.include_unmodified(true);
-    options.exclude_submodules(true);
-    options.include_ignored(opts.ignored);
-
-    let index_tree = gix::easy::index::from_repository(&repo)
-        .commit()
-        .tree(&repo)?;
-    let diff = gix::diff::tree_to_tree(&repo, Some(&options), Some(&index_tree), Some(&head_tree))
-        .unwrap();
-
-    for delta in diff.deltas {
-        let path = delta.old_file.path().unwrap().to_string();
-        match delta.status {
-            gix::diff::DeltaStatus::Unmodified => {
-                candidates.insert(path);
+    let mut status_options = git2::StatusOptions::new();
+    status_options
+        .include_unmodified(true)
+        .exclude_submodules(true)
+        .include_ignored(opts.ignored)
+        .show(git2::StatusShow::IndexAndWorkdir);
+    let statuses = repo.statuses(Some(&mut status_options)).unwrap();
+    for entry in statuses.iter() {
+        let path = entry.path().unwrap();
+        match entry.status() {
+            git2::Status::CURRENT => {
+                candidates.insert(path.to_string());
             }
-            gix::diff::DeltaStatus::Modified => {
+            git2::Status::INDEX_MODIFIED => {
                 if opts.dirty {
-                    candidates.insert(path);
+                    candidates.insert(path.to_string());
                 } else if opts.verbose {
-                    println!("Ignored file with staged modifications: {}", path);
+                    println!("Ignored file with staged modifications: {path}");
                 }
             }
-            gix::diff::DeltaStatus::TypeChange => {
-                if opts.verbose {
-                    println!("Ignored file in state TypeChange: {}", path);
+            git2::Status::WT_MODIFIED => {
+                if opts.dirty {
+                    candidates.insert(path.to_string());
+                } else if opts.verbose {
+                    println!("Ignored file with local modifications: {path}");
                 }
             }
-            _ => {
+            git_state => {
                 if opts.verbose {
-                    println!("Ignored file in state {:?}: {}", delta.status, path);
+                    println!("Ignored file in state {git_state:?}: {path}");
                 }
             }
         }
@@ -184,19 +173,18 @@ fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
 
 fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     let mut workdir_files = FileSet::new();
-    let head_reference = repo.refs.read_reference(ReferenceKind::Head).unwrap();
-    let head_commit = gix::easy::peel::peel_commit(&head_reference.target().into())?;
-    let head_tree = head_commit.tree(&repo)?;
-
-    head_tree.iter_tree_walk(|dir, entry| {
+    let head = repo.head()?;
+    let tree = head.peel_to_tree()?;
+    tree.walk(git2::TreeWalkMode::PostOrder, |dir, entry| {
         let file = format!("{}{}", dir, entry.name().unwrap());
         let path = Path::new(&file);
         if path.is_dir() {
-            return Ok(false);
+            return git2::TreeWalkResult::Skip;
         }
         workdir_files.insert(file);
-        Ok(true)
-    })?;
+        git2::TreeWalkResult::Ok
+    })
+    .unwrap();
     Ok(workdir_files)
 }
 
@@ -204,50 +192,69 @@ fn touch(repo: &Repository, touchables: HashSet<String>, opts: &Options) -> Resu
     let mut touched = FileSet::new();
     for path in touchables.iter() {
         let pathbuf = Path::new(path).to_path_buf();
-        let head_reference = repo.refs.read_reference(ReferenceKind::Head).unwrap();
-        let head_commit = gix::easy::peel::peel_commit(&head_reference.target().into())?;
-        let commits = gix::easy::revwalk::commits(head_commit.into());
+        let mut revwalk = repo.revwalk().unwrap();
+        // See https://github.com/arkark/git-hist/blob/main/src/app/git.rs
+        revwalk.push_head().unwrap();
+        revwalk.simplify_first_parent().unwrap();
+        let commits: Vec<_> = revwalk
+            .map(|oid| oid.and_then(|oid| repo.find_commit(oid)).unwrap())
+            .collect();
         let latest_file_oid = commits
             .first()
-            .map(|commit| {
-                commit
-                    .tree(&repo)?
-                    .get_path(&pathbuf)?
-                    .as_blob()
-                    .and_then(|blob| Some(blob.id()))
+            .unwrap()
+            .tree()
+            .unwrap()
+            .get_path(&pathbuf)
+            .and_then(|entry| {
+                if let Some(git2::ObjectType::Blob) = entry.kind() {
+                    Ok(entry)
+                } else {
+                    Err(git2::Error::new(
+                        git2::ErrorCode::NotFound,
+                        git2::ErrorClass::Tree,
+                        "no blob",
+                    ))
+                }
             })
-            .flatten()
-            .ok_or(Error::new(
-                ErrorKind::Other,
-                "Unable to find the latest file OID",
-            ))?;
+            .unwrap()
+            .id();
         let mut file_oid = latest_file_oid;
-        let mut file_path = pathbuf.to_path_buf();
-        for commit in commits.iter() {
-            let old_tree = commit.parents.first().and_then(|p| p.tree(&repo));
-            let new_tree = commit.tree(&repo)?;
-            let diff =
-                gix::diff::tree_to_tree(&repo, None, Some(&old_tree), Some(&new_tree)).unwrap();
-            let delta = diff.deltas.iter().find(|delta| {
-                delta.old_file.path == file_path.to_str().unwrap() && delta.old_file.id == file_oid
-            });
-            if let Some(delta) = delta {
-                file_oid = delta.new_file.id;
-                file_path = PathBuf::from(&delta.new_file.path);
-            }
-        }
-        let metadata = fs::metadata(&path).unwrap();
-        let commit_time = FileTime::from_unix_time(
-            head_commit.time().seconds as i64,
-            head_commit.time().nanoseconds as i64,
-        );
+        let mut file_path = pathbuf;
+        let last_commit = commits
+            .iter()
+            .filter_map(|commit| {
+                let old_tree = commit.parent(0).and_then(|p| p.tree()).ok();
+                let new_tree = commit.tree().ok();
+                let mut diff = repo
+                    .diff_tree_to_tree(old_tree.as_ref(), new_tree.as_ref(), None)
+                    .unwrap();
+                diff.find_similar(Some(git2::DiffFindOptions::new().renames(true)))
+                    .unwrap();
+                let delta = diff.deltas().find(|delta| {
+                    delta.new_file().id() == file_oid
+                        && delta
+                            .new_file()
+                            .path()
+                            .filter(|path| *path == file_path)
+                            .is_some()
+                });
+                if let Some(delta) = delta.as_ref() {
+                    file_oid = delta.old_file().id();
+                    file_path = delta.old_file().path().unwrap().to_path_buf();
+                }
+                delta.map(|_| commit)
+            })
+            .next()
+            .unwrap();
+        let metadata = fs::metadata(path).unwrap();
+        let commit_time = FileTime::from_unix_time(last_commit.time().seconds(), 0);
         let file_mtime = FileTime::from_last_modification_time(&metadata);
         if file_mtime != commit_time {
-            filetime::set_file_mtime(&path, commit_time)?;
+            filetime::set_file_mtime(path, commit_time)?;
             if opts.verbose {
-                println!("Rewound the clock: {}", path);
+                println!("Rewound the clock: {path}");
             }
-            touched.insert(path.to_string());
+            touched.insert((*path).to_string());
         }
     }
     Ok(touched)
