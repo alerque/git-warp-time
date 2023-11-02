@@ -8,7 +8,7 @@ use clap_complete::shells::{Bash, Elvish, Fish, PowerShell, Zsh};
 use clap_mangen::Man;
 use std::env;
 #[cfg(feature = "completions")]
-use std::{fs, path};
+use std::{fs, path::Path};
 use vergen::EmitBuilder;
 
 #[cfg(feature = "completions")]
@@ -22,7 +22,6 @@ fn main() {
     } else {
         builder = *builder.git_describe(true, true, None);
     };
-
     builder.emit().expect("Unable to generate the cargo keys!");
     #[cfg(feature = "manpage")]
     generate_manpage();
@@ -37,7 +36,7 @@ fn generate_manpage() {
         None => return,
         Some(out_dir) => out_dir,
     };
-    let manpage_dir = path::Path::new(&out_dir);
+    let manpage_dir = Path::new(&out_dir);
     fs::create_dir_all(manpage_dir).expect("Unable to create directory for generated manpages");
     let app = Cli::command();
     let bin_name: &str = app
@@ -59,7 +58,7 @@ fn generate_shell_completions() {
         None => return,
         Some(out_dir) => out_dir,
     };
-    let completions_dir = path::Path::new(&out_dir).join("completions");
+    let completions_dir = Path::new(&out_dir).join("completions");
     fs::create_dir_all(&completions_dir)
         .expect("Could not create directory in which to place completions");
     let app = Cli::command();
