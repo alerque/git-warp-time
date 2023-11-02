@@ -1,11 +1,13 @@
-#![doc = include_str!("../README.md")]
+// #![doc = include_str!("../README.md")]
 
 use filetime::FileTime;
-use git2::Repository;
+use git2::Repository as Git2Repository;
+use gix::discover::repository;
+use gix::Repository;
 use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
-use std::{env, error, fs, result};
+use std::{error, fs, result};
 
 #[cfg(feature = "cli")]
 pub mod cli;
@@ -86,8 +88,8 @@ impl Options {
 /// Iterate over either the explicit file list or the working directory files, filter out any that
 /// have local modifications, are ignored by Git, or are in submodules and reset the file metadata
 /// mtime to the commit date of the last commit that affected the file in question.
-pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
-    let workdir_files = gather_workdir_files(&repo)?;
+pub fn reset_mtime(repo: (Git2Repository, Repository), opts: Options) -> Result<FileSet> {
+    let workdir_files = gather_workdir_files(&repo.0)?;
     let touchables: FileSet = match opts.paths {
         Some(ref paths) => {
             let not_tracked = paths.difference(&workdir_files);
@@ -102,30 +104,31 @@ pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
             workdir_files.intersection(paths).cloned().collect()
         }
         None => {
-            let candidates = gather_index_files(&repo, &opts);
+            let candidates = gather_index_files(&repo.1, &opts);
             workdir_files.intersection(&candidates).cloned().collect()
         }
     };
-    let touched = touch(&repo, touchables, &opts)?;
+    let touched = touch(&repo.0, touchables, &opts)?;
     Ok(touched)
 }
 
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
-pub fn get_repo() -> Result<Repository> {
-    Ok(Repository::open_from_env()?)
+pub fn get_repo() -> Result<(Git2Repository, Repository)> {
+    let git2repo = Git2Repository::open_from_env()?;
+    let repo = gix::discover(".")?;
+    Ok((git2repo, repo))
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
 pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
-    let cwd = env::current_dir()?;
-    let root = repo
-        .workdir()
-        .ok_or("No Git working directory found")?
-        .to_path_buf();
-    let prefix = cwd.strip_prefix(&root).unwrap();
     let abs_input_path = if Path::new(&path).is_absolute() {
         PathBuf::from(path.clone())
     } else {
+        let prefix = repo.prefix()?;
+        let prefix = match prefix {
+            Some(path) => path,
+            None => Path::new(""),
+        };
         prefix.join(path.clone())
     };
     let resolved_path = abs_input_path.to_string_lossy().to_string();
@@ -134,44 +137,46 @@ pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
 
 fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
     let mut candidates = FileSet::new();
-    let mut status_options = git2::StatusOptions::new();
-    status_options
-        .include_unmodified(true)
-        .exclude_submodules(true)
-        .include_ignored(opts.ignored)
-        .show(git2::StatusShow::IndexAndWorkdir);
-    let statuses = repo.statuses(Some(&mut status_options)).unwrap();
-    for entry in statuses.iter() {
-        let path = entry.path().unwrap();
-        match entry.status() {
-            git2::Status::CURRENT => {
-                candidates.insert(path.to_string());
-            }
-            git2::Status::INDEX_MODIFIED => {
-                if opts.dirty {
-                    candidates.insert(path.to_string());
-                } else if opts.verbose {
-                    println!("Ignored file with staged modifications: {path}");
-                }
-            }
-            git2::Status::WT_MODIFIED => {
-                if opts.dirty {
-                    candidates.insert(path.to_string());
-                } else if opts.verbose {
-                    println!("Ignored file with local modifications: {path}");
-                }
-            }
-            git_state => {
-                if opts.verbose {
-                    println!("Ignored file in state {git_state:?}: {path}");
-                }
-            }
-        }
-    }
+    // let mut options = gix::config::file::includes::Options::new();
+    dbg!(options);
+    // let mut status_options = git2::StatusOptions::new();
+    // status_options
+    //     .include_unmodified(true)
+    //     .exclude_submodules(true)
+    //     .include_ignored(opts.ignored)
+    //     .show(git2::StatusShow::IndexAndWorkdir);
+    // let statuses = repo.statuses(Some(&mut status_options)).unwrap();
+    // for entry in statuses.iter() {
+    //     let path = entry.path().unwrap();
+    //     match entry.status() {
+    //         git2::Status::CURRENT => {
+    //             candidates.insert(path.to_string());
+    //         }
+    //         git2::Status::INDEX_MODIFIED => {
+    //             if opts.dirty {
+    //                 candidates.insert(path.to_string());
+    //             } else if opts.verbose {
+    //                 println!("Ignored file with staged modifications: {path}");
+    //             }
+    //         }
+    //         git2::Status::WT_MODIFIED => {
+    //             if opts.dirty {
+    //                 candidates.insert(path.to_string());
+    //             } else if opts.verbose {
+    //                 println!("Ignored file with local modifications: {path}");
+    //             }
+    //         }
+    //         git_state => {
+    //             if opts.verbose {
+    //                 println!("Ignored file in state {git_state:?}: {path}");
+    //             }
+    //         }
+    //     }
+    // }
     candidates
 }
 
-fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
+fn gather_workdir_files(repo: &Git2Repository) -> Result<FileSet> {
     let mut workdir_files = FileSet::new();
     let head = repo.head()?;
     let tree = head.peel_to_tree()?;
@@ -188,7 +193,7 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
-fn touch(repo: &Repository, touchables: HashSet<String>, opts: &Options) -> Result<FileSet> {
+fn touch(repo: &Git2Repository, touchables: HashSet<String>, opts: &Options) -> Result<FileSet> {
     let mut touched = FileSet::new();
     for path in touchables.iter() {
         let pathbuf = Path::new(path).to_path_buf();
