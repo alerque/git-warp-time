@@ -6,6 +6,7 @@ use hashbrown::HashSet;
 use rayon::prelude::*;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 use std::{env, error, fs, result};
 
 #[cfg(feature = "cli")]
@@ -87,7 +88,7 @@ impl Options {
 /// Iterate over either the explicit file list or the working directory files, filter out any that
 /// have local modifications, are ignored by Git, or are in submodules and reset the file metadata
 /// mtime to the commit date of the last commit that affected the file in question.
-pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<()> {
+pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<FileSet> {
     let workdir_files = gather_workdir_files(&repo)?;
     let touchables: FileSet = match opts.paths {
         Some(ref paths) => {
@@ -107,7 +108,8 @@ pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<()> {
             workdir_files.intersection(&candidates).cloned().collect()
         }
     };
-    process_touchables(touchables, &opts)
+    let touched = process_touchables(touchables, &opts)?;
+    Ok(touched)
 }
 
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
@@ -250,7 +252,8 @@ fn get_timestamps(repo: &Repository, path: &String) -> Result<(FileTime, FileTim
     Ok((file_mtime, commit_time))
 }
 
-fn process_touchables(touchables: HashSet<String>, opts: &Options) -> Result<()> {
+fn process_touchables(touchables: HashSet<String>, opts: &Options) -> Result<FileSet> {
+    let touched = Arc::new(RwLock::new(FileSet::new()));
     touchables.par_iter().for_each(|path| {
         let repo = get_repo().unwrap();
         let (file_mtime, commit_time) = get_timestamps(&repo, path).unwrap();
@@ -259,7 +262,10 @@ fn process_touchables(touchables: HashSet<String>, opts: &Options) -> Result<()>
             if opts.verbose {
                 println!("Rewound the clock: {path}");
             }
+            touched.write().unwrap().insert((*path).to_string());
         }
     });
-    Ok(())
+    let touched: RwLock<FileSet> = Arc::into_inner(touched).unwrap();
+    let touched: FileSet = RwLock::into_inner(touched).unwrap();
+    Ok(touched)
 }

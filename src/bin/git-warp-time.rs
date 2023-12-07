@@ -29,5 +29,6 @@ fn main() -> git_warp_time::Result<()> {
         }
         opts = opts.paths(Some(paths));
     }
-    reset_mtimes(repo, opts)
+    reset_mtimes(repo, opts)?;
+    Ok(())
 }
