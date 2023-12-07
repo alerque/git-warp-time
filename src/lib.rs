@@ -2,7 +2,8 @@
 
 use filetime::FileTime;
 use git2::Repository;
-use std::collections::HashSet;
+use hashbrown::HashSet;
+use rayon::prelude::*;
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::{env, error, fs, result};
@@ -86,7 +87,7 @@ impl Options {
 /// Iterate over either the explicit file list or the working directory files, filter out any that
 /// have local modifications, are ignored by Git, or are in submodules and reset the file metadata
 /// mtime to the commit date of the last commit that affected the file in question.
-pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
+pub fn reset_mtime(repo: Repository, opts: Options) -> Result<()> {
     let workdir_files = gather_workdir_files(&repo)?;
     let touchables: FileSet = match opts.paths {
         Some(ref paths) => {
@@ -106,8 +107,7 @@ pub fn reset_mtime(repo: Repository, opts: Options) -> Result<FileSet> {
             workdir_files.intersection(&candidates).cloned().collect()
         }
     };
-    let touched = touch(&repo, touchables, &opts)?;
-    Ok(touched)
+    process_touchables(touchables, &opts)
 }
 
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
@@ -188,74 +188,78 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
-fn touch(repo: &Repository, touchables: HashSet<String>, opts: &Options) -> Result<FileSet> {
-    let mut touched = FileSet::new();
-    for path in touchables.iter() {
-        let pathbuf = Path::new(path).to_path_buf();
-        let mut revwalk = repo.revwalk().unwrap();
-        // See https://github.com/arkark/git-hist/blob/main/src/app/git.rs
-        revwalk.push_head().unwrap();
-        revwalk.simplify_first_parent().unwrap();
-        let commits: Vec<_> = revwalk
-            .map(|oid| oid.and_then(|oid| repo.find_commit(oid)).unwrap())
-            .collect();
-        let latest_file_oid = commits
-            .first()
-            .unwrap()
-            .tree()
-            .unwrap()
-            .get_path(&pathbuf)
-            .and_then(|entry| {
-                if let Some(git2::ObjectType::Blob) = entry.kind() {
-                    Ok(entry)
-                } else {
-                    Err(git2::Error::new(
-                        git2::ErrorCode::NotFound,
-                        git2::ErrorClass::Tree,
-                        "no blob",
-                    ))
-                }
-            })
-            .unwrap()
-            .id();
-        let mut file_oid = latest_file_oid;
-        let mut file_path = pathbuf;
-        let last_commit = commits
-            .iter()
-            .filter_map(|commit| {
-                let old_tree = commit.parent(0).and_then(|p| p.tree()).ok();
-                let new_tree = commit.tree().ok();
-                let mut diff = repo
-                    .diff_tree_to_tree(old_tree.as_ref(), new_tree.as_ref(), None)
-                    .unwrap();
-                diff.find_similar(Some(git2::DiffFindOptions::new().renames(true)))
-                    .unwrap();
-                let delta = diff.deltas().find(|delta| {
-                    delta.new_file().id() == file_oid
-                        && delta
-                            .new_file()
-                            .path()
-                            .filter(|path| *path == file_path)
-                            .is_some()
-                });
-                if let Some(delta) = delta.as_ref() {
-                    file_oid = delta.old_file().id();
-                    file_path = delta.old_file().path().unwrap().to_path_buf();
-                }
-                delta.map(|_| commit)
-            })
-            .next()
-            .unwrap();
-        let metadata = fs::metadata(path).unwrap();
-        let commit_time = FileTime::from_unix_time(last_commit.time().seconds(), 0);
-        let file_mtime = FileTime::from_last_modification_time(&metadata);
+fn get_timestamps(repo: &Repository, path: &String) -> Result<(FileTime, FileTime)> {
+    let pathbuf = Path::new(&path).to_path_buf();
+    let mut revwalk = repo.revwalk().unwrap();
+    // See https://github.com/arkark/git-hist/blob/main/src/app/git.rs
+    revwalk.push_head().unwrap();
+    revwalk.simplify_first_parent().unwrap();
+    let commits: Vec<_> = revwalk
+        .map(|oid| oid.and_then(|oid| repo.find_commit(oid)).unwrap())
+        .collect();
+    let latest_file_oid = commits
+        .first()
+        .unwrap()
+        .tree()
+        .unwrap()
+        .get_path(&pathbuf)
+        .and_then(|entry| {
+            if let Some(git2::ObjectType::Blob) = entry.kind() {
+                Ok(entry)
+            } else {
+                Err(git2::Error::new(
+                    git2::ErrorCode::NotFound,
+                    git2::ErrorClass::Tree,
+                    "no blob",
+                ))
+            }
+        })
+        .unwrap()
+        .id();
+    let mut file_oid = latest_file_oid;
+    let mut file_path = pathbuf;
+    let last_commit = commits
+        .iter()
+        .filter_map(|commit| {
+            let old_tree = commit.parent(0).and_then(|p| p.tree()).ok();
+            let new_tree = commit.tree().ok();
+            let mut diff = repo
+                .diff_tree_to_tree(old_tree.as_ref(), new_tree.as_ref(), None)
+                .unwrap();
+            diff.find_similar(Some(git2::DiffFindOptions::new().renames(true)))
+                .unwrap();
+            let delta = diff.deltas().find(|delta| {
+                delta.new_file().id() == file_oid
+                    && delta
+                        .new_file()
+                        .path()
+                        .filter(|path| *path == file_path)
+                        .is_some()
+            });
+            if let Some(delta) = delta.as_ref() {
+                file_oid = delta.old_file().id();
+                file_path = delta.old_file().path().unwrap().to_path_buf();
+            }
+            delta.map(|_| commit)
+        })
+        .next()
+        .unwrap();
+    let metadata = fs::metadata(path).unwrap();
+    let commit_time = FileTime::from_unix_time(last_commit.time().seconds(), 0);
+    let file_mtime = FileTime::from_last_modification_time(&metadata);
+    Ok((file_mtime, commit_time))
+}
+
+fn process_touchables(touchables: HashSet<String>, opts: &Options) -> Result<()> {
+    touchables.par_iter().for_each(|path| {
+        let repo = get_repo().unwrap();
+        let (file_mtime, commit_time) = get_timestamps(&repo, path).unwrap();
         if file_mtime != commit_time {
-            filetime::set_file_mtime(path, commit_time)?;
+            filetime::set_file_mtime(path, commit_time).unwrap();
             if opts.verbose {
                 println!("Rewound the clock: {path}");
             }
-            touched.insert((*path).to_string());
         }
-    }
-    Ok(touched)
+    });
+    Ok(())
 }
