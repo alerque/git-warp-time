@@ -2,7 +2,7 @@ use clap::CommandFactory;
 
 use git_warp_time::cli::Cli;
 use git_warp_time::FileSet;
-use git_warp_time::{get_repo, reset_mtime, resolve_repo_path};
+use git_warp_time::{get_repo, reset_mtimes, resolve_repo_path};
 
 use std::io::{Error, ErrorKind};
 use std::path::Path;
@@ -29,5 +29,5 @@ fn main() -> git_warp_time::Result<()> {
         }
         opts = opts.paths(Some(paths));
     }
-    reset_mtime(repo, opts)
+    reset_mtimes(repo, opts)
 }

@@ -15,7 +15,7 @@ pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
 
 pub type FileSet = HashSet<String>;
 
-/// Options passed to `reset_mtime()`
+/// Options passed to `reset_mtimes()`
 #[derive(Clone, Debug)]
 pub struct Options {
     paths: Option<FileSet>,
@@ -87,7 +87,7 @@ impl Options {
 /// Iterate over either the explicit file list or the working directory files, filter out any that
 /// have local modifications, are ignored by Git, or are in submodules and reset the file metadata
 /// mtime to the commit date of the last commit that affected the file in question.
-pub fn reset_mtime(repo: Repository, opts: Options) -> Result<()> {
+pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<()> {
     let workdir_files = gather_workdir_files(&repo)?;
     let touchables: FileSet = match opts.paths {
         Some(ref paths) => {
