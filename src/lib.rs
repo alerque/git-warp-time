@@ -1,9 +1,8 @@
 #![doc = include_str!("../README.md")]
 
 use filetime::FileTime;
-use git2::Repository;
-use hashbrown::HashSet;
-use rayon::prelude::*;
+use git2::{Diff, Oid, Repository};
+use hashbrown::{HashMap, HashSet};
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
@@ -108,7 +107,7 @@ pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<FileSet> {
             workdir_files.intersection(&candidates).cloned().collect()
         }
     };
-    let touched = process_touchables(touchables, &opts)?;
+    let touched = process_touchables(&repo, touchables, &opts)?;
     Ok(touched)
 }
 
@@ -190,8 +189,24 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
-fn get_timestamps(repo: &Repository, path: &String) -> Result<(FileTime, FileTime)> {
-    let pathbuf = Path::new(&path).to_path_buf();
+fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut PathBuf) -> bool {
+    diff.deltas().any(|delta| {
+        delta.new_file().id() == *oid
+            && delta
+            .new_file()
+            .path()
+            .filter(|path| *path == touchable_path)
+            .is_some()
+    })
+}
+
+fn process_touchables(
+    repo: &Repository,
+    touchables: HashSet<String>,
+    opts: &Options,
+) -> Result<FileSet> {
+    let touched = Arc::new(RwLock::new(FileSet::new()));
+    let mut touchable_oids: HashMap<Oid, PathBuf> = HashMap::new();
     let mut revwalk = repo.revwalk().unwrap();
     // See https://github.com/arkark/git-hist/blob/main/src/app/git.rs
     revwalk.push_head().unwrap();
@@ -199,30 +214,29 @@ fn get_timestamps(repo: &Repository, path: &String) -> Result<(FileTime, FileTim
     let commits: Vec<_> = revwalk
         .map(|oid| oid.and_then(|oid| repo.find_commit(oid)).unwrap())
         .collect();
-    let latest_file_oid = commits
-        .first()
-        .unwrap()
-        .tree()
-        .unwrap()
-        .get_path(&pathbuf)
-        .and_then(|entry| {
-            if let Some(git2::ObjectType::Blob) = entry.kind() {
-                Ok(entry)
-            } else {
-                Err(git2::Error::new(
-                    git2::ErrorCode::NotFound,
-                    git2::ErrorClass::Tree,
-                    "no blob",
-                ))
-            }
-        })
-        .unwrap()
-        .id();
-    let mut file_oid = latest_file_oid;
-    let mut file_path = pathbuf;
-    let last_commit = commits
+    let latest_tree = commits.first().unwrap().tree().unwrap();
+    touchables.iter().for_each(|path| {
+        let touchable_path = Path::new(&path).to_path_buf();
+        let current_oid = latest_tree
+            .get_path(&touchable_path)
+            .and_then(|entry| {
+                if let Some(git2::ObjectType::Blob) = entry.kind() {
+                    Ok(entry)
+                } else {
+                    Err(git2::Error::new(
+                        git2::ErrorCode::NotFound,
+                        git2::ErrorClass::Tree,
+                        "no blob",
+                    ))
+                }
+            })
+            .unwrap()
+            .id();
+        touchable_oids.insert(current_oid, touchable_path);
+    });
+    commits
         .iter()
-        .find_map(|commit| {
+        .try_for_each(|commit| {
             let old_tree = commit.parent(0).and_then(|p| p.tree()).ok();
             let new_tree = commit.tree().ok();
             let mut diff = repo
@@ -230,40 +244,25 @@ fn get_timestamps(repo: &Repository, path: &String) -> Result<(FileTime, FileTim
                 .unwrap();
             diff.find_similar(Some(git2::DiffFindOptions::new().renames(true)))
                 .unwrap();
-            let delta = diff.deltas().find(|delta| {
-                delta.new_file().id() == file_oid
-                    && delta
-                        .new_file()
-                        .path()
-                        .filter(|path| *path == file_path)
-                        .is_some()
+            touchable_oids.retain(|oid, touchable_path| {
+                let affected = diff_affects_oid(&diff, oid, touchable_path);
+                if affected {
+                    let pathstring = touchable_path.clone().into_os_string().into_string().unwrap();
+                    let metadata = fs::metadata(&touchable_path).unwrap();
+                    let commit_time = FileTime::from_unix_time(commit.time().seconds(), 0);
+                    let file_mtime = FileTime::from_last_modification_time(&metadata);
+                    if file_mtime != commit_time {
+                        filetime::set_file_mtime(&touchable_path, commit_time).unwrap();
+                        touched.write().unwrap().insert(pathstring.clone());
+                        if opts.verbose {
+                            println!("Rewound the clock: {pathstring}");
+                        }
+                    }
+                };
+                !affected
             });
-            if let Some(delta) = delta.as_ref() {
-                file_oid = delta.old_file().id();
-                file_path = delta.old_file().path().unwrap().to_path_buf();
-            }
-            delta.map(|_| commit)
-        })
-        .unwrap();
-    let metadata = fs::metadata(path).unwrap();
-    let commit_time = FileTime::from_unix_time(last_commit.time().seconds(), 0);
-    let file_mtime = FileTime::from_last_modification_time(&metadata);
-    Ok((file_mtime, commit_time))
-}
-
-fn process_touchables(touchables: HashSet<String>, opts: &Options) -> Result<FileSet> {
-    let touched = Arc::new(RwLock::new(FileSet::new()));
-    touchables.par_iter().for_each(|path| {
-        let repo = get_repo().unwrap();
-        let (file_mtime, commit_time) = get_timestamps(&repo, path).unwrap();
-        if file_mtime != commit_time {
-            filetime::set_file_mtime(path, commit_time).unwrap();
-            if opts.verbose {
-                println!("Rewound the clock: {path}");
-            }
-            touched.write().unwrap().insert((*path).to_string());
-        }
-    });
+            if !touchable_oids.is_empty() { Some (()) } else { None }
+        });
     let touched: RwLock<FileSet> = Arc::into_inner(touched).unwrap();
     let touched: FileSet = RwLock::into_inner(touched).unwrap();
     Ok(touched)
