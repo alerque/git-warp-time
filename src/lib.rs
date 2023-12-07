@@ -222,7 +222,7 @@ fn get_timestamps(repo: &Repository, path: &String) -> Result<(FileTime, FileTim
     let mut file_path = pathbuf;
     let last_commit = commits
         .iter()
-        .filter_map(|commit| {
+        .find_map(|commit| {
             let old_tree = commit.parent(0).and_then(|p| p.tree()).ok();
             let new_tree = commit.tree().ok();
             let mut diff = repo
@@ -244,7 +244,6 @@ fn get_timestamps(repo: &Repository, path: &String) -> Result<(FileTime, FileTim
             }
             delta.map(|_| commit)
         })
-        .next()
         .unwrap();
     let metadata = fs::metadata(path).unwrap();
     let commit_time = FileTime::from_unix_time(last_commit.time().seconds(), 0);
