@@ -52,7 +52,7 @@ git-warp-time = "0.5"
 Then use the crate functions and types in your project something like this:
 
 ```rust
-use git_warp_time::{get_repo, reset_mtime};
+use git_warp_time::{get_repo, reset_mtimes};
 use git_warp_time::{FileSet, Options};
 
 fn main() {
@@ -61,7 +61,7 @@ fn main() {
     paths.insert("foo.txt".to_string());
     let mut opts = Options::new();
     opts.verbose(true).paths(Some(paths));
-    let files = reset_mtime(repo, opts).unwrap();
+    let files = reset_mtimes(repo, opts).unwrap();
     println!("Actioned files: {:?}", files);
 }
 ```
