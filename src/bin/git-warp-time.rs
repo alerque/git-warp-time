@@ -14,9 +14,9 @@ fn main() -> git_warp_time::Result<()> {
     let positionals = matches.get_many::<String>("paths");
     let repo = get_repo().unwrap();
     let mut opts = git_warp_time::Options::new()
-        .dirty(matches.contains_id("dirty"))
-        .ignored(matches.contains_id("ignored"))
-        .verbose(!matches.contains_id("quiet"));
+        .dirty(matches.get_flag("dirty"))
+        .ignored(matches.get_flag("ignored"))
+        .verbose(!matches.get_flag("quiet"));
     if matches.contains_id("paths") {
         let mut paths: FileSet = FileSet::new();
         for path in positionals.unwrap() {
