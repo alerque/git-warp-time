@@ -13,7 +13,7 @@ pub mod cli;
 
 pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
 
-pub type FileSet = HashSet<String>;
+pub type FileSet = HashSet<PathBuf>;
 
 /// Options passed to `reset_mtimes()`
 #[derive(Clone, Debug)]
@@ -117,19 +117,18 @@ pub fn get_repo() -> Result<Repository> {
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
-pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<String> {
+pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<PathBuf> {
     let cwd = env::current_dir()?;
     let root = repo
         .workdir()
         .ok_or("No Git working directory found")?
         .to_path_buf();
     let prefix = cwd.strip_prefix(&root).unwrap();
-    let abs_input_path = if Path::new(&path).is_absolute() {
+    let resolved_path  = if Path::new(&path).is_absolute() {
         PathBuf::from(path.clone())
     } else {
         prefix.join(path.clone())
     };
-    let resolved_path = abs_input_path.to_string_lossy().to_string();
     Ok(resolved_path)
 }
 
@@ -146,18 +145,18 @@ fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
         let path = entry.path().unwrap();
         match entry.status() {
             git2::Status::CURRENT => {
-                candidates.insert(path.to_string());
+                candidates.insert(path.into());
             }
             git2::Status::INDEX_MODIFIED => {
                 if opts.dirty {
-                    candidates.insert(path.to_string());
+                    candidates.insert(path.into());
                 } else if opts.verbose {
                     println!("Ignored file with staged modifications: {path}");
                 }
             }
             git2::Status::WT_MODIFIED => {
                 if opts.dirty {
-                    candidates.insert(path.to_string());
+                    candidates.insert(path.into());
                 } else if opts.verbose {
                     println!("Ignored file with local modifications: {path}");
                 }
@@ -182,7 +181,7 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
         if path.is_dir() {
             return git2::TreeWalkResult::Skip;
         }
-        workdir_files.insert(file);
+        workdir_files.insert(file.into());
         git2::TreeWalkResult::Ok
     })
     .unwrap();
@@ -202,7 +201,7 @@ fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut PathBuf) -> boo
 
 fn process_touchables(
     repo: &Repository,
-    touchables: HashSet<String>,
+    touchables: FileSet,
     opts: &Options,
 ) -> Result<FileSet> {
     let touched = Arc::new(RwLock::new(FileSet::new()));
@@ -247,14 +246,14 @@ fn process_touchables(
             touchable_oids.retain(|oid, touchable_path| {
                 let affected = diff_affects_oid(&diff, oid, touchable_path);
                 if affected {
-                    let pathstring = touchable_path.clone().into_os_string().into_string().unwrap();
                     let metadata = fs::metadata(&touchable_path).unwrap();
                     let commit_time = FileTime::from_unix_time(commit.time().seconds(), 0);
                     let file_mtime = FileTime::from_last_modification_time(&metadata);
                     if file_mtime != commit_time {
                         filetime::set_file_mtime(&touchable_path, commit_time).unwrap();
-                        touched.write().unwrap().insert(pathstring.clone());
+                        touched.write().unwrap().insert(touchable_path.to_path_buf());
                         if opts.verbose {
+                            let pathstring = touchable_path.clone().into_os_string().into_string().unwrap();
                             println!("Rewound the clock: {pathstring}");
                         }
                     }
