@@ -2,7 +2,7 @@
 
 use filetime::FileTime;
 use git2::{Diff, Oid, Repository};
-use hashbrown::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
