@@ -124,7 +124,7 @@ pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<PathBuf> {
         .ok_or("No Git working directory found")?
         .to_path_buf();
     let prefix = cwd.strip_prefix(&root).unwrap();
-    let resolved_path  = if Path::new(&path).is_absolute() {
+    let resolved_path = if Path::new(&path).is_absolute() {
         PathBuf::from(path.clone())
     } else {
         prefix.join(path.clone())
@@ -192,14 +192,14 @@ fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut PathBuf) -> boo
     diff.deltas().any(|delta| {
         delta.new_file().id() == *oid
             && delta
-            .new_file()
-            .path()
-            .filter(|path| *path == touchable_path)
-            .is_some()
+                .new_file()
+                .path()
+                .filter(|path| *path == touchable_path)
+                .is_some()
     })
 }
 
-fn touch_if_older (path: PathBuf, time: i64, verbose: bool) -> bool {
+fn touch_if_older(path: PathBuf, time: i64, verbose: bool) -> bool {
     let commit_time = FileTime::from_unix_time(time, 0);
     let metadata = fs::metadata(&path).unwrap();
     let file_mtime = FileTime::from_last_modification_time(&metadata);
@@ -209,16 +209,12 @@ fn touch_if_older (path: PathBuf, time: i64, verbose: bool) -> bool {
             let pathstring = path.clone().into_os_string().into_string().unwrap();
             println!("Rewound the clock: {pathstring}");
         }
-        return true
+        return true;
     }
     false
 }
 
-fn process_touchables(
-    repo: &Repository,
-    touchables: FileSet,
-    opts: &Options,
-) -> Result<FileSet> {
+fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) -> Result<FileSet> {
     let touched = Arc::new(RwLock::new(FileSet::new()));
     let mut touchable_oids: HashMap<Oid, PathBuf> = HashMap::new();
     let mut revwalk = repo.revwalk().unwrap();
@@ -248,28 +244,33 @@ fn process_touchables(
             .id();
         touchable_oids.insert(current_oid, touchable_path);
     });
-    commits
-        .iter()
-        .try_for_each(|commit| {
-            let old_tree = commit.parent(0).and_then(|p| p.tree()).ok();
-            let new_tree = commit.tree().ok();
-            let mut diff = repo
-                .diff_tree_to_tree(old_tree.as_ref(), new_tree.as_ref(), None)
-                .unwrap();
-            diff.find_similar(Some(git2::DiffFindOptions::new().renames(true)))
-                .unwrap();
-            touchable_oids.retain(|oid, touchable_path| {
-                let affected = diff_affects_oid(&diff, oid, touchable_path);
-                if affected {
-                    let time = commit.time().seconds();
-                    if touch_if_older(touchable_path.to_path_buf(), time, opts.verbose) {
-                        touched.write().unwrap().insert(touchable_path.to_path_buf());
-                    }
-                };
-                !affected
-            });
-            if !touchable_oids.is_empty() { Some (()) } else { None }
+    commits.iter().try_for_each(|commit| {
+        let old_tree = commit.parent(0).and_then(|p| p.tree()).ok();
+        let new_tree = commit.tree().ok();
+        let mut diff = repo
+            .diff_tree_to_tree(old_tree.as_ref(), new_tree.as_ref(), None)
+            .unwrap();
+        diff.find_similar(Some(git2::DiffFindOptions::new().renames(true)))
+            .unwrap();
+        touchable_oids.retain(|oid, touchable_path| {
+            let affected = diff_affects_oid(&diff, oid, touchable_path);
+            if affected {
+                let time = commit.time().seconds();
+                if touch_if_older(touchable_path.to_path_buf(), time, opts.verbose) {
+                    touched
+                        .write()
+                        .unwrap()
+                        .insert(touchable_path.to_path_buf());
+                }
+            };
+            !affected
         });
+        if !touchable_oids.is_empty() {
+            Some(())
+        } else {
+            None
+        }
+    });
     let touched: RwLock<FileSet> = Arc::into_inner(touched).unwrap();
     let touched: FileSet = RwLock::into_inner(touched).unwrap();
     Ok(touched)
