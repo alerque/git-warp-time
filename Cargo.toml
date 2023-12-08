@@ -32,7 +32,6 @@ lto = true
 
 [dependencies]
 filetime = "0.2"
-rayon = "1.8"
 
   [dependencies.clap]
   version = "4.4"
@@ -42,10 +41,6 @@ rayon = "1.8"
   [dependencies.git2]
   version = "0.18"
   default-features = false
-
-  [dependencies.hashbrown]
-  version = "0.14"
-  features = [ "rayon" ]
 
 [build-dependencies]
 
