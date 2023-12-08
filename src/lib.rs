@@ -199,6 +199,21 @@ fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut PathBuf) -> boo
     })
 }
 
+fn touch_if_older (path: PathBuf, time: i64, verbose: bool) -> bool {
+    let commit_time = FileTime::from_unix_time(time, 0);
+    let metadata = fs::metadata(&path).unwrap();
+    let file_mtime = FileTime::from_last_modification_time(&metadata);
+    if file_mtime != commit_time {
+        filetime::set_file_mtime(&path, commit_time).unwrap();
+        if verbose {
+            let pathstring = path.clone().into_os_string().into_string().unwrap();
+            println!("Rewound the clock: {pathstring}");
+        }
+        return true
+    }
+    false
+}
+
 fn process_touchables(
     repo: &Repository,
     touchables: FileSet,
@@ -246,16 +261,9 @@ fn process_touchables(
             touchable_oids.retain(|oid, touchable_path| {
                 let affected = diff_affects_oid(&diff, oid, touchable_path);
                 if affected {
-                    let metadata = fs::metadata(&touchable_path).unwrap();
-                    let commit_time = FileTime::from_unix_time(commit.time().seconds(), 0);
-                    let file_mtime = FileTime::from_last_modification_time(&metadata);
-                    if file_mtime != commit_time {
-                        filetime::set_file_mtime(&touchable_path, commit_time).unwrap();
+                    let time = commit.time().seconds();
+                    if touch_if_older(touchable_path.to_path_buf(), time, opts.verbose) {
                         touched.write().unwrap().insert(touchable_path.to_path_buf());
-                        if opts.verbose {
-                            let pathstring = touchable_path.clone().into_os_string().into_string().unwrap();
-                            println!("Rewound the clock: {pathstring}");
-                        }
                     }
                 };
                 !affected
