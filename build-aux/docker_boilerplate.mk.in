@@ -1,0 +1,11 @@
+export VERSION_FROM_AUTOTOOLS = v$(VERSION)
+
+DOCKER_DEVELOPER_TARGETS = docker
+.PHONY: $(DOCKER_DEVELOPER_TARGETS)
+
+export DOCKER_REGISTRY ?= ghcr.io
+export DOCKER_REPO ?= alerque/$(TRANSFORMED_PACKAGE_NAME)
+export DOCKER_TAG ?= HEAD
+
+docker: Dockerfile hooks/build .version
+	./hooks/build $(VERSION)
