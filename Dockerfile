@@ -31,7 +31,7 @@ RUN apk add --no-cache $RUNTIME_DEPS
 RUN git config --system --add safe.directory '*'
 
 LABEL org.opencontainers.image.title="Git Warp Time"
-LABEL org.opencontainers.image.description="A containerized version of Git Wark Time"
+LABEL org.opencontainers.image.description="A containerized version of Git Warp Time"
 LABEL org.opencontainers.image.authors="Caleb Maclennan <caleb@alerque.com>"
 LABEL org.opencontainers.image.licenses="GPL-3.0"
 LABEL org.opencontainers.image.url="https://github.com/alerque/git-warp-time/pkgs/container/git-warp-time"
