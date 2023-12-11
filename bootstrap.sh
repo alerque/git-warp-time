@@ -27,5 +27,6 @@ fi
 # a file to avoid a file not found error on first run. The configure process
 # will rebuild this and also re-include it into the final Makefile.
 touch build-aux/rust_boilerplate.mk
+touch build-aux/docker_boilerplate.mk
 
 autoreconf --install
