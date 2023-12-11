@@ -5,7 +5,7 @@
 [![Docker Build Status](https://img.shields.io/github/actions/workflow/status/alerque/git-warp-time/deploy.yml?branch=master&label=Docker%20Build&logo=Docker)](https://github.com/alerque/git-warp-time/pkgs/container/git-warp-time)
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/alerque/git-warp-time?label=Tag&logo=GitHub)](https://github.com/alerque/git-warp-time/releases)
 
-CLI utility (and Rust library) that resets the timestamps of files in a Git repository working directory to the exact timestamp of the last commit which modified each file.
+A CLI utility (and Rust library) that resets the timestamps of files in a Git repository working directory to the exact timestamp of the last commit which modified each file.
 
 For use as a Rust library, include in your `Cargo.toml` as documented on the [crates.io listing](https://crates.io/crates/git-warp-time) and use per [the API documentation](https://docs.rs/git-warp-time).
 
@@ -67,6 +67,24 @@ fn main() {
     let files = reset_mtimes(repo, opts).unwrap();
     println!("Actioned files: {:?}", files);
 }
+```
+
+## CI Usage
+
+This may me run in a CI workflow on almost any CI platform either as a binary or using the Docker container found in the GitHub Container Registry (`docker run ghcr.io/alerque/git-warp-time:latest`).
+It is important to note that the Git repository needs to be checked out with depth.
+A shallow clone will cause all timestamps to be as new as the oldest commit in the clone, i.e. newer than actual.
+
+For GitHub Actions this looks like so:
+
+```yaml
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Git Warp Time
+        uses: alerque/git-warp-time:latest
 ```
 
 # The story
