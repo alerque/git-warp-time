@@ -28,7 +28,7 @@ RUN apk add --no-cache $RUNTIME_DEPS
 # so we can sidestep some Git security restrictions. This app recommends
 # mounting data to /app, but this *can* be changed externally and *will* be
 # changed when run by GitHub Actions, so we need to cover our bases.
-RUN echo '[safe]\n\tdirectory = *' > /etc/gitconfig
+RUN git config --system --add safe.directory '*'
 
 LABEL org.opencontainers.image.title="Git Warp Time"
 LABEL org.opencontainers.image.description="A containerized version of Git Wark Time"
