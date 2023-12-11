@@ -2,6 +2,8 @@
 
 [![Rust Test Status](https://img.shields.io/github/actions/workflow/status/alerque/git-warp-time/rust_test.yml?branch=master&label=Rust+Test&logo=Rust)](https://github.com/alerque/git-warp-time/actions?workflow=Rust+Test)
 [![Rust Lint Status](https://img.shields.io/github/actions/workflow/status/alerque/git-warp-time/rust_lint.yml?branch=master&label=Rust+Lint&logo=Rust)](https://github.com/alerque/git-warp-time/actions?workflow=Rust+Lint)
+[![Docker Build Status](https://img.shields.io/github/actions/workflow/status/alerque/git-warp-time/deploy.yml?branch=master&label=Docker%20Build&logo=Docker)](https://github.com/alerque/git-warp-time/pkgs/container/git-warp-time)
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/alerque/git-warp-time?label=Tag&logo=GitHub)](https://github.com/alerque/git-warp-time/releases)
 
 CLI utility (and Rust library) that resets the timestamps of files in a Git repository working directory to the exact timestamp of the last commit which modified each file.
 
