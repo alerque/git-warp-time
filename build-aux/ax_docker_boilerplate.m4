@@ -14,7 +14,11 @@ AC_DEFUN_ONCE([AX_DOCKER_BOILERPLATE], [
 
         AC_MSG_NOTICE([checking for tools used by automake to build Docker projects])
         AC_PROG_INSTALL
-        AX_PROGVAR([docker])
+        AM_COND_IF([DEPENDENCY_CHECKS], [
+                AM_COND_IF([DEVELOPER], [
+                        AX_PROGVAR([docker])
+                ])
+        ])
 
         AC_CONFIG_FILES([build-aux/docker_boilerplate.mk])
 
