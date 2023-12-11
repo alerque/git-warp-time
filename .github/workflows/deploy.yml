@@ -32,4 +32,4 @@ jobs:
           DOCKER_REPO: ${{ github.repository }}
           DOCKER_TAG: ${{ env.REF }}
           DOCKER_USERNAME: ${{ github.actor }}
-          DOCKER_PAT: ${{ secrets.CR_GWT }}
+          DOCKER_PAT: ${{ secrets.GHCR_PAT }}
