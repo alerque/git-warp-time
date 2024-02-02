@@ -58,6 +58,6 @@ filetime = "0.2"
   features = [ "derive" ]
 
   [build-dependencies.vergen]
-  version = "8.2"
+  version = "8.3"
   default-features = false
   features = [ "build", "cargo", "git", "gitoxide" ]
