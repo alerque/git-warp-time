@@ -48,7 +48,7 @@ In your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-git-warp-time = "0.5"
+git-warp-time = "0.7"
 ```
 
 Then use the crate functions and types in your project something like this:
