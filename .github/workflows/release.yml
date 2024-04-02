@@ -33,3 +33,4 @@ jobs:
           files: |
             git-warp-time-${{ env.VERSION }}.zip
             git-warp-time-${{ env.VERSION }}.tar.zst
+            git-warp-time-${{ env.VERSION }}.sha256.txt
