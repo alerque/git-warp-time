@@ -6,6 +6,7 @@ AM_INIT_AUTOMAKE([foreign tar-pax dist-zstd dist-zip no-dist-gzip color-tests])
 AM_SILENT_RULES([yes])
 
 AX_GIT_VERSION
+AX_DIST_CHECKSUMS
 AX_TRANSFORM_PACKAGE_NAME
 
 AC_PROG_INSTALL

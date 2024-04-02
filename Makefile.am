@@ -20,5 +20,6 @@ BUILT_SOURCES =
 
 CLEANFILES =
 
+include $(top_srcdir)/build-aux/dist_checksums.mk
 include $(top_srcdir)/build-aux/rust_boilerplate.mk
 include $(top_srcdir)/build-aux/docker_boilerplate.mk
