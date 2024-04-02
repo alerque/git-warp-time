@@ -2,6 +2,8 @@ name: Release
 
 on:
   push:
+    branches:
+      - test-release
     tags:
       - v*.*.*
 
@@ -27,10 +29,10 @@ jobs:
       - name: Build source package
         run: |
           make dist
-      - name: Publish Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            git-warp-time-${{ env.VERSION }}.zip
-            git-warp-time-${{ env.VERSION }}.tar.zst
-            git-warp-time-${{ env.VERSION }}.sha256.txt
+      # - name: Publish Release
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     files: |
+      #       git-warp-time-${{ env.VERSION }}.zip
+      #       git-warp-time-${{ env.VERSION }}.tar.zst
+      #       git-warp-time-${{ env.VERSION }}.sha256.txt
