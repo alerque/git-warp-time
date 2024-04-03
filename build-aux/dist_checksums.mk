@@ -7,7 +7,11 @@ checksum_dist = \
 	$(SHA256SUM) $(distdir)*.{tar.{gz,bz2,lz,xz,zst},zip} |\
 		$(TEE) $(distdir).sha256.txt
 
-CLEANFILES += $(distdir).sha256.txt
+distclean-local: distclean-local-checksums
+
+.PHONY: distclean-local-checksums
+distclean-local-checksums:
+	rm -f $(distdir).sha256.txt
 
 # Append checksum operation to function that runs after compressing dist archives
 am__post_remove_distdir = $(am__remove_distdir); $(checksum_dist)
