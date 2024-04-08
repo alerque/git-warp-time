@@ -1,6 +1,6 @@
 [package]
 name = "git-warp-time"
-version = "0.7.4"
+version = "0.7.5"
 authors = ["Caleb Maclennan <caleb@alerque.com>"]
 edition = "2021"
 rust-version = "1.74.0"
