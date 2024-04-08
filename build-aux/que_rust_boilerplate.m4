@@ -9,11 +9,6 @@ AC_DEFUN_ONCE([QUE_RUST_BOILERPLATE], [
                         [Build Rust code with debugging information]))
         AM_CONDITIONAL([DEBUG_RELEASE], [test "x$debug_release" = "xyes"])
 
-        AC_ARG_ENABLE([dependency-checks],
-                AS_HELP_STRING([--disable-dependency-checks],
-                        [Disable build tooling dependency checks]))
-        AM_CONDITIONAL([DEPENDENCY_CHECKS], [test "x$enable_dependency_checks" != "xno"])
-
         AC_MSG_NOTICE([checking for tools used by automake to build Rust projects])
         AC_PROG_INSTALL
         AC_PROG_SED
@@ -22,11 +17,9 @@ AC_DEFUN_ONCE([QUE_RUST_BOILERPLATE], [
         QUE_PROGVAR([rustc])
         QUE_PROGVAR([cmp])
         QUE_PROGVAR([xargs])
-        AM_COND_IF([DEPENDENCY_CHECKS], [
-                AM_COND_IF([DEVELOPER_MODE], [
-                        QUE_PROGVAR([git])
-                        QUE_PROGVAR([rustfmt])
-                ])
+        AM_COND_IF([DEVELOPER_MODE], [
+                QUE_PROGVAR([git])
+                QUE_PROGVAR([rustfmt])
         ])
 
         AC_MSG_CHECKING([whether to build Rust code with debugging information])
