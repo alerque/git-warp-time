@@ -21,6 +21,8 @@ BUILT_SOURCES =
 
 CLEANFILES =
 
+DISTCLEANFILES = @AMINCLUDE@
+
 # A classical use of the autoconf-archive include macro would expand
 # INC_AMINCLUDE here, but the perl script that inlines include statements
 # runs before the automake that organizes logic and performs substitution.
@@ -29,5 +31,3 @@ CLEANFILES =
 # By entering the expanded value directly we are ready in time for the inlining
 # functionality and hence can use conditionals in included makefile fragments.
 include $(top_srcdir)/aminclude.am
-
-DISTCLEANFILES = @AMINCLUDE@
