@@ -7,11 +7,13 @@ checksum_dist = \
 	$(SHA256SUM) $(distdir)*.{tar.{gz,bz2,lz,xz,zst},zip} |\
 		$(TEE) $(distdir).sha256.txt
 
-distclean-local: distclean-local-checksums
-
-.PHONY: distclean-local-checksums
-distclean-local-checksums:
+# Since the checksums file isn't an artifact produced by the default source dist
+# creation process, we have to clean it up ourselves so distcheck can see that
+# everything round-tripped cleanly.
+distclean-local:
 	rm -f $(distdir).sha256.txt
 
 # Append checksum operation to function that runs after compressing dist archives
 am__post_remove_distdir = $(am__remove_distdir); $(checksum_dist)
+
+# vim: ft=automake

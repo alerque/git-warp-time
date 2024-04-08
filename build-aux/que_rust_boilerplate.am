@@ -15,9 +15,6 @@ CARGO_ENV = CARGO_TARGET_DIR=@abs_top_builddir@/target
 CARGO_BIN = @abs_top_builddir@/target/@RUST_TARGET_SUBDIR@/$(PACKAGE_NAME)
 _RUST_OUT = @abs_top_builddir@/target/@RUST_TARGET_SUBDIR@/.cargo_out_dir
 
-include $(top_srcdir)/build-aux/git_version.mk
-include $(top_srcdir)/build-aux/shell_completion_dirs.mk
-
 @PACKAGE_NAME@$(EXEEXT): $(CARGO_BIN)
 	$(INSTALL) $< $@
 
@@ -63,7 +60,7 @@ $(_RUST_OUT) $(CARGO_BIN): $(@PACKAGE_VAR@_SOURCES) $(EXTRA_@PACKAGE_VAR@_SOURCE
 RUST_DEVELOPER_TARGETS = cargo-test clippy rustfmt
 .PHONY: $(RUST_DEVELOPER_TARGETS)
 
-if DEVELOPER
+if DEVELOPER_MODE
 
 test: cargo-test
 lint: rustfmt clippy
@@ -85,11 +82,11 @@ cargo-test: $(PACKAGE_NAME)$(EXEEXT)
 	cd $(srcdir)
 	$(CARGO_ENV) $(CARGO) $(CARGO_VERBOSE) test $(CARGO_FEATURE_ARGS) --locked
 
-else !DEVELOPER
+else !DEVELOPER_MODE
 
 $(RUST_DEVELOPER_TARGETS):
-	@: $(error "Please reconfigure using --enable-developer to use developer tooling")
+	@: $(error "Please reconfigure using --enable-developer-mode to use developer tooling")
 
-endif !DEVELOPER
+endif !DEVELOPER_MODE
 
 # vim: ft=automake

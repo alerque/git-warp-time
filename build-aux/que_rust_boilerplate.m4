@@ -1,7 +1,8 @@
-AC_DEFUN_ONCE([AX_RUST_BOILERPLATE], [
+AC_DEFUN_ONCE([QUE_RUST_BOILERPLATE], [
 
-        AX_TRANSFORM_PACKAGE_NAME
-        AX_SHELL_COMPLETION_DIRS
+        QUE_TRANSFORM_PACKAGE_NAME
+        QUE_DEVELOPER_MODE
+        QUE_SHELL_COMPLETION_DIRS
 
         AC_ARG_ENABLE(debug,
                 AS_HELP_STRING([--enable-debug],
@@ -13,22 +14,18 @@ AC_DEFUN_ONCE([AX_RUST_BOILERPLATE], [
                         [Disable build tooling dependency checks]))
         AM_CONDITIONAL([DEPENDENCY_CHECKS], [test "x$enable_dependency_checks" != "xno"])
 
-        AC_ARG_ENABLE([developer],
-                AS_HELP_STRING([--enable-developer],
-                        [Check for and enable tooling required only for developers]))
-        AM_CONDITIONAL([DEVELOPER], [test "x$enable_developer" = "xyes"])
-
         AC_MSG_NOTICE([checking for tools used by automake to build Rust projects])
         AC_PROG_INSTALL
-        AX_PROGVAR([cargo])
-        AX_PROGVAR([jq])
-        AX_PROGVAR([rustc])
-        AX_PROGVAR([cmp])
-        AX_PROGVAR([xargs])
+        AC_PROG_SED
+        QUE_PROGVAR([cargo])
+        QUE_PROGVAR([jq])
+        QUE_PROGVAR([rustc])
+        QUE_PROGVAR([cmp])
+        QUE_PROGVAR([xargs])
         AM_COND_IF([DEPENDENCY_CHECKS], [
-                AM_COND_IF([DEVELOPER], [
-                        AX_PROGVAR([git])
-                        AX_PROGVAR([rustfmt])
+                AM_COND_IF([DEVELOPER_MODE], [
+                        QUE_PROGVAR([git])
+                        QUE_PROGVAR([rustfmt])
                 ])
         ])
 
@@ -42,6 +39,11 @@ AC_DEFUN_ONCE([AX_RUST_BOILERPLATE], [
         ])
         AC_SUBST([RUST_TARGET_SUBDIR])
 
-        AC_CONFIG_FILES([build-aux/rust_boilerplate.mk])
+        AC_REQUIRE([AX_AM_MACROS])
+        AX_ADD_AM_MACRO([dnl
+EXTRA_DIST += build-aux/que_rust_boilerplate.am
+
+$($SED -E "s/@PACKAGE_VAR@/$PACKAGE_VAR/g;s/@PACKAGE_NAME@/$PACKAGE_NAME/g" build-aux/que_rust_boilerplate.am)
+])dnl
 
 ])
