@@ -1,10 +1,12 @@
 /target
 /git-warp-time
 git-warp-time-*
+git-warp-time.1
 .version
 .version-prev
 Makefile
 Makefile.in
+aminclude.am
 aclocal.m4
 build-aux/install-sh
 build-aux/missing
