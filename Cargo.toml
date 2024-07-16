@@ -39,7 +39,7 @@ filetime = "0.2"
   features = [ "derive", "wrap_help" ]
 
   [dependencies.git2]
-  version = "0.18"
+  version = "0.19"
   default-features = false
 
 [build-dependencies]
