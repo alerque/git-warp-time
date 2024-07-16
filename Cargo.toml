@@ -57,7 +57,7 @@ filetime = "0.2"
   optional = true
   features = [ "derive" ]
 
-  [build-dependencies.vergen]
-  version = "8.3"
+  [build-dependencies.vergen-gix]
+  version = "1.0"
   default-features = false
-  features = [ "build", "cargo", "git", "gitoxide" ]
+  features = [ "build", "cargo", "rustc" ]
