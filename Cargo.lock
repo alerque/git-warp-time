@@ -410,6 +410,7 @@ dependencies = [
 name = "git-warp-time"
 version = "0.7.7"
 dependencies = [
+ "anyhow",
  "clap",
  "clap_complete",
  "clap_mangen",

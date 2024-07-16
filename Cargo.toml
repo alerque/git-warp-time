@@ -57,6 +57,9 @@ filetime = "0.2"
   optional = true
   features = [ "derive" ]
 
+  [build-dependencies.anyhow]
+  version = "1.0"
+
   [build-dependencies.vergen-gix]
   version = "1.0"
   default-features = false
