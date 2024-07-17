@@ -123,7 +123,7 @@ pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<PathBuf> {
         .workdir()
         .ok_or("No Git working directory found")?
         .to_path_buf();
-    let prefix = cwd.strip_prefix(&root).unwrap();
+    let prefix = cwd.strip_prefix(&root)?;
     let resolved_path = if Path::new(&path).is_absolute() {
         PathBuf::from(path.clone())
     } else {
@@ -183,8 +183,7 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
         }
         workdir_files.insert(file.into());
         git2::TreeWalkResult::Ok
-    })
-    .unwrap();
+    })?;
     Ok(workdir_files)
 }
 
@@ -217,14 +216,14 @@ fn touch_if_older(path: PathBuf, time: i64, verbose: bool) -> bool {
 fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) -> Result<FileSet> {
     let touched = Arc::new(RwLock::new(FileSet::new()));
     let mut touchable_oids: HashMap<Oid, PathBuf> = HashMap::new();
-    let mut revwalk = repo.revwalk().unwrap();
+    let mut revwalk = repo.revwalk()?;
     // See https://github.com/arkark/git-hist/blob/main/src/app/git.rs
-    revwalk.push_head().unwrap();
-    revwalk.simplify_first_parent().unwrap();
+    revwalk.push_head()?;
+    revwalk.simplify_first_parent()?;
     let commits: Vec<_> = revwalk
         .map(|oid| oid.and_then(|oid| repo.find_commit(oid)).unwrap())
         .collect();
-    let latest_tree = commits.first().unwrap().tree().unwrap();
+    let latest_tree = commits.first().unwrap().tree()?;
     touchables.iter().for_each(|path| {
         let touchable_path = Path::new(&path).to_path_buf();
         let current_oid = latest_tree
