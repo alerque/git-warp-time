@@ -1,17 +1,53 @@
 #![doc = include_str!("../README.md")]
 
+use snafu::prelude::*;
+
 use filetime::FileTime;
 use git2::{Diff, Oid, Repository};
 use std::collections::{HashMap, HashSet};
-use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
-use std::{env, error, fs, result};
+use std::{env, fs};
 
 #[cfg(feature = "cli")]
 pub mod cli;
 
-pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
+#[derive(Snafu)]
+pub enum Error {
+    NoRepository {
+        source: git2::Error,
+    },
+    NoWorkingDir {},
+    FailedToStripPrefix {
+        source: std::path::StripPrefixError,
+    },
+    UnableToLocateHEAD {
+        source: git2::Error,
+    },
+    UnableToParseTree {
+        source: git2::Error,
+    },
+    UnableToWalkTree {
+        source: git2::Error,
+    },
+    UnableToResolveCurrentWorkingDirectory {
+        source: std::io::Error,
+    },
+    #[snafu(display("Paths {} are not tracked in the repository.", paths))]
+    PathNotTracked {
+        paths: String,
+    },
+}
+
+// CLI errors are reported using the Debug trait, but Snafu sets up the Display tait. So we
+// deligate. c.f. https://github.com/shepmaster/snafu/issues/110
+impl std::fmt::Debug for Error {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        std::fmt::Display::fmt(self, fmt)
+    }
+}
+
+pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 pub type FileSet = HashSet<PathBuf>;
 
@@ -93,12 +129,8 @@ pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<FileSet> {
         Some(ref paths) => {
             let not_tracked = paths.difference(&workdir_files);
             if not_tracked.clone().count() > 0 {
-                let tracking_error =
-                    format!("Paths {not_tracked:?} are not tracked in the repository");
-                return Err(Box::new(Error::new(
-                    ErrorKind::InvalidInput,
-                    tracking_error,
-                )));
+                let not_tracked = format!("{not_tracked:?}");
+                return PathNotTrackedSnafu { paths: not_tracked }.fail();
             }
             workdir_files.intersection(paths).cloned().collect()
         }
@@ -113,17 +145,15 @@ pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<FileSet> {
 
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
 pub fn get_repo() -> Result<Repository> {
-    Ok(Repository::open_from_env()?)
+    let repo = Repository::open_from_env().context(NoRepositorySnafu)?;
+    Ok(repo)
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
 pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<PathBuf> {
-    let cwd = env::current_dir()?;
-    let root = repo
-        .workdir()
-        .ok_or("No Git working directory found")?
-        .to_path_buf();
-    let prefix = cwd.strip_prefix(&root)?;
+    let cwd = env::current_dir().context(UnableToResolveCurrentWorkingDirectorySnafu)?;
+    let root = repo.workdir().context(NoWorkingDirSnafu)?.to_path_buf();
+    let prefix = cwd.strip_prefix(&root).context(FailedToStripPrefixSnafu)?;
     let resolved_path = if Path::new(&path).is_absolute() {
         PathBuf::from(path.clone())
     } else {
@@ -173,8 +203,8 @@ fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
 
 fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     let mut workdir_files = FileSet::new();
-    let head = repo.head()?;
-    let tree = head.peel_to_tree()?;
+    let head = repo.head().context(UnableToLocateHEADSnafu)?;
+    let tree = head.peel_to_tree().context(UnableToParseTreeSnafu)?;
     tree.walk(git2::TreeWalkMode::PostOrder, |dir, entry| {
         let file = format!("{}{}", dir, entry.name().unwrap());
         let path = Path::new(&file);
@@ -183,7 +213,8 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
         }
         workdir_files.insert(file.into());
         git2::TreeWalkResult::Ok
-    })?;
+    })
+    .context(UnableToWalkTreeSnafu)?;
     Ok(workdir_files)
 }
 
@@ -216,14 +247,20 @@ fn touch_if_older(path: PathBuf, time: i64, verbose: bool) -> bool {
 fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) -> Result<FileSet> {
     let touched = Arc::new(RwLock::new(FileSet::new()));
     let mut touchable_oids: HashMap<Oid, PathBuf> = HashMap::new();
-    let mut revwalk = repo.revwalk()?;
+    let mut revwalk = repo.revwalk().context(UnableToWalkTreeSnafu)?;
     // See https://github.com/arkark/git-hist/blob/main/src/app/git.rs
-    revwalk.push_head()?;
-    revwalk.simplify_first_parent()?;
+    revwalk.push_head().context(UnableToLocateHEADSnafu)?;
+    revwalk
+        .simplify_first_parent()
+        .context(UnableToParseTreeSnafu)?;
     let commits: Vec<_> = revwalk
         .map(|oid| oid.and_then(|oid| repo.find_commit(oid)).unwrap())
         .collect();
-    let latest_tree = commits.first().unwrap().tree()?;
+    let latest_tree = commits
+        .first()
+        .unwrap()
+        .tree()
+        .context(UnableToWalkTreeSnafu)?;
     touchables.iter().for_each(|path| {
         let touchable_path = Path::new(&path).to_path_buf();
         let current_oid = latest_tree

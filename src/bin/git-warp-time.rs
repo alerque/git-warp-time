@@ -13,13 +13,13 @@ enum Error {
         "Current working directory is not a valid Git repository.\nDetails: {}",
         source
     ))]
-    NoRepository { source: Box<dyn snafu::Error> },
+    NoRepository { source: git_warp_time::Error },
 
     #[snafu(display("Unable to access repository history.\nDetails: {}", source))]
-    CouldNotAccessRepository { source: Box<dyn snafu::Error> },
+    CouldNotAccessRepository { source: git_warp_time::Error },
 
     #[snafu(display("Unable to change modification time of files.\nDetails: {}", source))]
-    UnableToResetMTime { source: Box<dyn snafu::Error> },
+    UnableToResetMTime { source: git_warp_time::Error },
 
     #[snafu(display("Path '{}' does not exist", path))]
     PathNotFound { path: String },
@@ -52,7 +52,6 @@ fn main() -> Result<()> {
                 return PathNotFoundSnafu { path: path.clone() }.fail();
             }
             let path = resolve_repo_path(&repo, path).context(CouldNotAccessRepositorySnafu)?;
-            dbg!(path.clone());
             paths.insert(path);
         }
         opts = opts.paths(Some(paths));
