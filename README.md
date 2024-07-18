@@ -59,15 +59,13 @@ use git_warp_time::{get_repo, reset_mtimes};
 use git_warp_time::{FileSet, Options};
 use std::path::PathBuf;
 
-fn main() {
-    let repo = get_repo().unwrap();
-    let mut paths = FileSet::new();
-    paths.insert(PathBuf::from("foo.txt"));
-    let mut opts = Options::new();
-    opts.verbose(true).paths(Some(paths));
-    let files = reset_mtimes(repo, opts).unwrap();
-    println!("Actioned files: {:?}", files);
-}
+let repo = get_repo().unwrap();
+let mut paths = FileSet::new();
+paths.insert(PathBuf::from("foo.txt"));
+let mut opts = Options::new();
+opts.verbose(true).paths(Some(paths));
+let files = reset_mtimes(repo, opts).unwrap();
+println!("Actioned files: {:?}", files);
 ```
 
 ## CI Usage
