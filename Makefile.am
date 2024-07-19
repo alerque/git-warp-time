@@ -31,3 +31,21 @@ DISTCLEANFILES = @AMINCLUDE@
 # By entering the expanded value directly we are ready in time for the inlining
 # functionality and hence can use conditionals in included makefile fragments.
 include $(top_srcdir)/aminclude.am
+
+PHONY_DEVELOPER_TARGETS = release-preview
+.PHONY: $(PHONY_DEVELOPER_TARGETS)
+
+if DEVELOPER_MODE
+
+release-preview:
+	$(GITCLIFF) --unreleased
+
+CHANGELOG.md: .version
+	$(GITCLIFF) -o $@
+
+else !DEVELOPER_MODE
+
+$(PHONY_DEVELOPER_TARGETS):
+	@: $(error "Please reconfigure using --enable-developer-mode to use developer tooling")
+
+endif !DEVELOPER_MODE

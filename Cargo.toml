@@ -66,3 +66,12 @@ snafu-cli-debug = "0.1"
   version = "1.0"
   default-features = false
   features = [ "build", "cargo", "rustc" ]
+
+[package.metadata.git-cliff.git]
+protect_breaking_commits = true
+commit_parsers = [
+  { message = "^feat", group = "<!-- 0 -->Features" },
+  { message = "^fix", group = "<!-- 1 -->Bug Fixes" },
+  { message = "^perf", group = "<!-- 2 -->Performance" },
+  { message = ".*", skip = true },
+]
