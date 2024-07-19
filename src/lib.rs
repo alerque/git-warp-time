@@ -2,10 +2,11 @@
 
 use snafu::prelude::*;
 
+use camino::{Utf8Path, Utf8PathBuf};
 use filetime::FileTime;
 use git2::{Diff, Oid, Repository};
 use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::convert::TryInto;
 use std::sync::{Arc, RwLock};
 use std::{env, fs};
 
@@ -30,6 +31,10 @@ pub enum Error {
     PathError {
         source: std::path::StripPrefixError,
     },
+    #[snafu(display("Path contains invalid Unicode:\n{}", source))]
+    PathEncodingError {
+        source: camino::FromPathBufError,
+    },
     UnresolvedError {},
 }
 
@@ -43,7 +48,7 @@ impl std::fmt::Debug for Error {
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-pub type FileSet = HashSet<PathBuf>;
+pub type FileSet = HashSet<Utf8PathBuf>;
 
 /// Options passed to `reset_mtimes()`
 #[derive(Clone, Debug)]
@@ -144,14 +149,18 @@ pub fn get_repo() -> Result<Repository> {
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
-pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<PathBuf> {
-    let cwd = env::current_dir().context(IoSnafu)?;
-    let root = repo.workdir().context(UnresolvedSnafu)?.to_path_buf();
-    let prefix = cwd.strip_prefix(&root).context(PathSnafu)?;
-    let resolved_path = if Path::new(&path).is_absolute() {
-        PathBuf::from(path.clone())
+pub fn resolve_repo_path(repo: &Repository, path: impl Into<Utf8PathBuf>) -> Result<Utf8PathBuf> {
+    let path: Utf8PathBuf = path.into();
+    let cwd: Utf8PathBuf = env::current_dir()
+        .context(IoSnafu)?
+        .try_into()
+        .context(PathEncodingSnafu)?;
+    let root = repo.workdir().context(UnresolvedSnafu)?;
+    let prefix: Utf8PathBuf = cwd.strip_prefix(root).context(PathSnafu)?.into();
+    let resolved_path = if path.is_absolute() {
+        path
     } else {
-        prefix.join(path.clone())
+        prefix.join(path)
     };
     Ok(resolved_path)
 }
@@ -204,7 +213,7 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     tree.walk(git2::TreeWalkMode::PostOrder, |dir, entry| {
         if let Some(name) = entry.name() {
             let file = format!("{}{}", dir, name);
-            let path = Path::new(&file);
+            let path = Utf8Path::new(&file);
             if path.is_dir() {
                 return git2::TreeWalkResult::Skip;
             }
@@ -216,7 +225,7 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
-fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut PathBuf) -> bool {
+fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut Utf8PathBuf) -> bool {
     diff.deltas().any(|delta| {
         delta.new_file().id() == *oid
             && delta
@@ -227,18 +236,14 @@ fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut PathBuf) -> boo
     })
 }
 
-fn touch_if_older(path: PathBuf, time: i64, verbose: bool) -> Result<bool> {
+fn touch_if_older(path: Utf8PathBuf, time: i64, verbose: bool) -> Result<bool> {
     let commit_time = FileTime::from_unix_time(time, 0);
     let metadata = fs::metadata(&path).context(IoSnafu)?;
     let file_mtime = FileTime::from_last_modification_time(&metadata);
     if file_mtime != commit_time {
         filetime::set_file_mtime(&path, commit_time).context(IoSnafu)?;
         if verbose {
-            if let Ok(pathstring) = path.clone().into_os_string().into_string() {
-                println!("Rewound the clock: {pathstring}");
-            } else {
-                return UnresolvedSnafu {}.fail();
-            }
+            println!("Rewound the clock: {path}");
         }
         return Ok(true);
     }
@@ -247,7 +252,7 @@ fn touch_if_older(path: PathBuf, time: i64, verbose: bool) -> Result<bool> {
 
 fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) -> Result<FileSet> {
     let touched = Arc::new(RwLock::new(FileSet::new()));
-    let mut touchable_oids: HashMap<Oid, PathBuf> = HashMap::new();
+    let mut touchable_oids: HashMap<Oid, Utf8PathBuf> = HashMap::new();
     let mut revwalk = repo.revwalk().context(LibGitSnafu)?;
     // See https://github.com/arkark/git-hist/blob/main/src/app/git.rs
     revwalk.push_head().context(LibGitSnafu)?;
@@ -261,9 +266,9 @@ fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) ->
         .tree()
         .context(LibGitSnafu)?;
     touchables.iter().for_each(|path| {
-        let touchable_path = Path::new(&path).to_path_buf();
+        let touchable_path: Utf8PathBuf = path.into();
         let current_oid = latest_tree
-            .get_path(&touchable_path)
+            .get_path(&touchable_path.clone().into_std_path_buf())
             .and_then(|entry| {
                 if let Some(git2::ObjectType::Blob) = entry.kind() {
                     Ok(entry)
