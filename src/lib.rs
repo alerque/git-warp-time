@@ -1,17 +1,47 @@
 #![doc = include_str!("../README.md")]
 
+use snafu::prelude::*;
+
 use filetime::FileTime;
 use git2::{Diff, Oid, Repository};
 use std::collections::{HashMap, HashSet};
-use std::io::{Error, ErrorKind};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
-use std::{env, error, fs, result};
+use std::{env, fs};
 
 #[cfg(feature = "cli")]
 pub mod cli;
 
-pub type Result<T> = result::Result<T, Box<dyn error::Error>>;
+#[derive(Snafu)]
+pub enum Error {
+    #[snafu(display("std::io::Error {}", source))]
+    IoError {
+        source: std::io::Error,
+    },
+    #[snafu(display("git2::Error {}", source))]
+    LibGitError {
+        source: git2::Error,
+    },
+    #[snafu(display("Paths {} are not tracked in the repository.", paths))]
+    PathNotTracked {
+        paths: String,
+    },
+    #[snafu(display("Cannot remove prefix from path:\n{}", source))]
+    PathError {
+        source: std::path::StripPrefixError,
+    },
+    UnresolvedError {},
+}
+
+// CLI errors are reported using the Debug trait, but Snafu sets up the Display tait. So we
+// deligate. c.f. https://github.com/shepmaster/snafu/issues/110
+impl std::fmt::Debug for Error {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        std::fmt::Display::fmt(self, fmt)
+    }
+}
+
+pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 pub type FileSet = HashSet<PathBuf>;
 
@@ -93,17 +123,13 @@ pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<FileSet> {
         Some(ref paths) => {
             let not_tracked = paths.difference(&workdir_files);
             if not_tracked.clone().count() > 0 {
-                let tracking_error =
-                    format!("Paths {not_tracked:?} are not tracked in the repository");
-                return Err(Box::new(Error::new(
-                    ErrorKind::InvalidInput,
-                    tracking_error,
-                )));
+                let not_tracked = format!("{not_tracked:?}");
+                return PathNotTrackedSnafu { paths: not_tracked }.fail();
             }
             workdir_files.intersection(paths).cloned().collect()
         }
         None => {
-            let candidates = gather_index_files(&repo, &opts);
+            let candidates = gather_index_files(&repo, &opts)?;
             workdir_files.intersection(&candidates).cloned().collect()
         }
     };
@@ -113,17 +139,15 @@ pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<FileSet> {
 
 /// Return a repository discovered from from the current working directory or $GIT_DIR settings.
 pub fn get_repo() -> Result<Repository> {
-    Ok(Repository::open_from_env()?)
+    let repo = Repository::open_from_env().context(LibGitSnafu)?;
+    Ok(repo)
 }
 
 /// Convert a path relative to the current working directory to be relative to the repository root
 pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<PathBuf> {
-    let cwd = env::current_dir()?;
-    let root = repo
-        .workdir()
-        .ok_or("No Git working directory found")?
-        .to_path_buf();
-    let prefix = cwd.strip_prefix(&root).unwrap();
+    let cwd = env::current_dir().context(IoSnafu)?;
+    let root = repo.workdir().context(UnresolvedSnafu)?.to_path_buf();
+    let prefix = cwd.strip_prefix(&root).context(PathSnafu)?;
     let resolved_path = if Path::new(&path).is_absolute() {
         PathBuf::from(path.clone())
     } else {
@@ -132,7 +156,7 @@ pub fn resolve_repo_path(repo: &Repository, path: &String) -> Result<PathBuf> {
     Ok(resolved_path)
 }
 
-fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
+fn gather_index_files(repo: &Repository, opts: &Options) -> Result<FileSet> {
     let mut candidates = FileSet::new();
     let mut status_options = git2::StatusOptions::new();
     status_options
@@ -140,9 +164,11 @@ fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
         .exclude_submodules(true)
         .include_ignored(opts.ignored)
         .show(git2::StatusShow::IndexAndWorkdir);
-    let statuses = repo.statuses(Some(&mut status_options)).unwrap();
+    let statuses = repo
+        .statuses(Some(&mut status_options))
+        .context(LibGitSnafu)?;
     for entry in statuses.iter() {
-        let path = entry.path().unwrap();
+        let path = entry.path().context(UnresolvedSnafu)?;
         match entry.status() {
             git2::Status::CURRENT => {
                 candidates.insert(path.into());
@@ -168,23 +194,25 @@ fn gather_index_files(repo: &Repository, opts: &Options) -> FileSet {
             }
         }
     }
-    candidates
+    Ok(candidates)
 }
 
 fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     let mut workdir_files = FileSet::new();
-    let head = repo.head()?;
-    let tree = head.peel_to_tree()?;
+    let head = repo.head().context(LibGitSnafu)?;
+    let tree = head.peel_to_tree().context(LibGitSnafu)?;
     tree.walk(git2::TreeWalkMode::PostOrder, |dir, entry| {
-        let file = format!("{}{}", dir, entry.name().unwrap());
-        let path = Path::new(&file);
-        if path.is_dir() {
-            return git2::TreeWalkResult::Skip;
+        if let Some(name) = entry.name() {
+            let file = format!("{}{}", dir, name);
+            let path = Path::new(&file);
+            if path.is_dir() {
+                return git2::TreeWalkResult::Skip;
+            }
+            workdir_files.insert(file.into());
         }
-        workdir_files.insert(file.into());
         git2::TreeWalkResult::Ok
     })
-    .unwrap();
+    .context(LibGitSnafu)?;
     Ok(workdir_files)
 }
 
@@ -199,32 +227,39 @@ fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut PathBuf) -> boo
     })
 }
 
-fn touch_if_older(path: PathBuf, time: i64, verbose: bool) -> bool {
+fn touch_if_older(path: PathBuf, time: i64, verbose: bool) -> Result<bool> {
     let commit_time = FileTime::from_unix_time(time, 0);
-    let metadata = fs::metadata(&path).unwrap();
+    let metadata = fs::metadata(&path).context(IoSnafu)?;
     let file_mtime = FileTime::from_last_modification_time(&metadata);
     if file_mtime != commit_time {
-        filetime::set_file_mtime(&path, commit_time).unwrap();
+        filetime::set_file_mtime(&path, commit_time).context(IoSnafu)?;
         if verbose {
-            let pathstring = path.clone().into_os_string().into_string().unwrap();
-            println!("Rewound the clock: {pathstring}");
+            if let Ok(pathstring) = path.clone().into_os_string().into_string() {
+                println!("Rewound the clock: {pathstring}");
+            } else {
+                return UnresolvedSnafu {}.fail();
+            }
         }
-        return true;
+        return Ok(true);
     }
-    false
+    Ok(false)
 }
 
 fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) -> Result<FileSet> {
     let touched = Arc::new(RwLock::new(FileSet::new()));
     let mut touchable_oids: HashMap<Oid, PathBuf> = HashMap::new();
-    let mut revwalk = repo.revwalk().unwrap();
+    let mut revwalk = repo.revwalk().context(LibGitSnafu)?;
     // See https://github.com/arkark/git-hist/blob/main/src/app/git.rs
-    revwalk.push_head().unwrap();
-    revwalk.simplify_first_parent().unwrap();
+    revwalk.push_head().context(LibGitSnafu)?;
+    revwalk.simplify_first_parent().context(LibGitSnafu)?;
     let commits: Vec<_> = revwalk
         .map(|oid| oid.and_then(|oid| repo.find_commit(oid)).unwrap())
         .collect();
-    let latest_tree = commits.first().unwrap().tree().unwrap();
+    let latest_tree = commits
+        .first()
+        .context(UnresolvedSnafu)?
+        .tree()
+        .context(LibGitSnafu)?;
     touchables.iter().for_each(|path| {
         let touchable_path = Path::new(&path).to_path_buf();
         let current_oid = latest_tree
@@ -256,13 +291,13 @@ fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) ->
             let affected = diff_affects_oid(&diff, oid, touchable_path);
             if affected {
                 let time = commit.time().seconds();
-                if touch_if_older(touchable_path.to_path_buf(), time, opts.verbose) {
+                if let Ok(true) = touch_if_older(touchable_path.to_path_buf(), time, opts.verbose) {
                     touched
                         .write()
                         .unwrap()
                         .insert(touchable_path.to_path_buf());
                 }
-            };
+            }
             !affected
         });
         if !touchable_oids.is_empty() {
