@@ -33,7 +33,6 @@ lto = true
 [dependencies]
 filetime = "0.2"
 snafu = "0.8"
-snafu-cli-debug = "0.1"
 
   [dependencies.clap]
   version = "4.5"
