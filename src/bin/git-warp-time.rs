@@ -9,20 +9,20 @@ use std::path::Path;
 
 #[derive(Snafu)]
 enum Error {
-    #[snafu(display(
-        "Current working directory is not a valid Git repository.\nDetails: {}",
-        source
-    ))]
+    #[snafu(display("Current working directory is not a valid Git repository.\n{}", source))]
     NoRepository { source: git_warp_time::Error },
 
-    #[snafu(display("Unable to access repository history.\nDetails: {}", source))]
+    #[snafu(display("Unable to access repository history.\n{}", source))]
     CouldNotAccessRepository { source: git_warp_time::Error },
 
-    #[snafu(display("Unable to change modification time of files.\nDetails: {}", source))]
+    #[snafu(display("Unable to change modification time of files.\n{}", source))]
     UnableToResetMTime { source: git_warp_time::Error },
 
     #[snafu(display("Path '{}' does not exist", path))]
     PathNotFound { path: String },
+
+    #[snafu(display("Invalid path argument"))]
+    UnableToFormPath {},
 }
 
 // CLI errors are reported using the Debug trait, but Snafu sets up the Display tait. So we
@@ -47,7 +47,7 @@ fn main() -> Result<()> {
         .verbose(!matches.get_flag("quiet"));
     if matches.contains_id("paths") {
         let mut paths: FileSet = FileSet::new();
-        for path in positionals.unwrap() {
+        for path in positionals.context(UnableToFormPathSnafu)? {
             if !Path::new(path).exists() {
                 return PathNotFoundSnafu { path: path.clone() }.fail();
             }
