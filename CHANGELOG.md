@@ -1,3 +1,15 @@
+## [0.8.0] - 2024-07-19
+
+### Features
+
+- *(cli)* Return readable messages on runtime errors
+- *(lib)* Return all errors from the library as snafu types
+- *(lib)* Simplify path handling by limiting to Unicode
+
+### Refactor
+
+- [**breaking**] Return errors via Snafu rather than panicking
+
 ## [0.7.5] - 2024-04-08
 
 ### Bug Fixes

@@ -7,7 +7,7 @@ inputs:
     default: ""
 runs:
   using: docker
-  image: docker://ghcr.io/alerque/git-warp-time:v0.7.7
+  image: docker://ghcr.io/alerque/git-warp-time:v0.8.0
   entrypoint: sh
   args:
     - -c
