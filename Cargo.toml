@@ -75,3 +75,6 @@ commit_parsers = [
   { message = "^perf", group = "<!-- 2 -->Performance" },
   { message = ".*", skip = true },
 ]
+commit_preprocessors = [
+  { pattern = '.*', replace_command = 'typos --write-changes -' },
+]

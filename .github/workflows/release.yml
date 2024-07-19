@@ -24,6 +24,7 @@ jobs:
           echo "${GITHUB_REF#refs/*/v}" > .tarball-version
           ./bootstrap.sh
           ./configure  \
+            GITCLIFF=: TYPOS=:\
             --enable-developer-mode \
             --without-{bash,fish,zsh}-completion-dir
       - name: Build source package
