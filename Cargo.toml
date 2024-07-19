@@ -31,6 +31,7 @@ zsh = ["completions"]
 lto = true
 
 [dependencies]
+camino = "1.1"
 filetime = "0.2"
 snafu = "0.8"
 
