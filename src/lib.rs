@@ -56,6 +56,7 @@ pub struct Options {
     paths: Option<FileSet>,
     dirty: bool,
     ignored: bool,
+    ignore_older: bool,
     verbose: bool,
 }
 
@@ -74,6 +75,7 @@ impl Options {
             paths: None,
             dirty: false,
             ignored: false,
+            ignore_older: false,
             verbose: false,
         }
     }
@@ -84,6 +86,7 @@ impl Options {
             paths: self.paths.clone(),
             dirty: flag,
             ignored: self.ignored,
+            ignore_older: self.ignore_older,
             verbose: self.verbose,
         }
     }
@@ -94,6 +97,18 @@ impl Options {
             paths: self.paths.clone(),
             dirty: self.dirty,
             ignored: flag,
+            ignore_older: self.ignore_older,
+            verbose: self.verbose,
+        }
+    }
+
+    /// Whether or not to touch files older than history, default is true
+    pub fn ignore_older(&self, flag: bool) -> Options {
+        Options {
+            paths: self.paths.clone(),
+            dirty: self.dirty,
+            ignored: self.ignored,
+            ignore_older: flag,
             verbose: self.verbose,
         }
     }
@@ -104,6 +119,7 @@ impl Options {
             paths: self.paths.clone(),
             dirty: self.dirty,
             ignored: self.ignored,
+            ignore_older: self.ignore_older,
             verbose: flag,
         }
     }
@@ -114,6 +130,7 @@ impl Options {
             paths: input,
             dirty: self.dirty,
             ignored: self.ignored,
+            ignore_older: self.ignore_older,
             verbose: self.verbose,
         }
     }
