@@ -1,0 +1,6 @@
+[default]
+locale = "en-us"
+
+[files]
+ignore-hidden = false
+extend-exclude = ["/.git"]
