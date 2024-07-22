@@ -1,3 +1,11 @@
+## [0.8.2] - 2024-07-22
+
+### Bug Fixes
+
+- *(build)* Avoid need to build binary to generate source package
+- *(build)* Mark changelog for inclusion in distribution
+- *(build)* Avoid the perceived need for an extra automake cycle in dist tarball
+
 ## [0.8.1] - 2024-07-22
 
 ### Features
