@@ -56,6 +56,7 @@ pub struct Options {
     paths: Option<FileSet>,
     dirty: bool,
     ignored: bool,
+    ignore_older: bool,
     verbose: bool,
 }
 
@@ -74,6 +75,7 @@ impl Options {
             paths: None,
             dirty: false,
             ignored: false,
+            ignore_older: false,
             verbose: false,
         }
     }
@@ -84,6 +86,7 @@ impl Options {
             paths: self.paths.clone(),
             dirty: flag,
             ignored: self.ignored,
+            ignore_older: self.ignore_older,
             verbose: self.verbose,
         }
     }
@@ -94,6 +97,18 @@ impl Options {
             paths: self.paths.clone(),
             dirty: self.dirty,
             ignored: flag,
+            ignore_older: self.ignore_older,
+            verbose: self.verbose,
+        }
+    }
+
+    /// Whether or not to touch files older than history, default is true
+    pub fn ignore_older(&self, flag: bool) -> Options {
+        Options {
+            paths: self.paths.clone(),
+            dirty: self.dirty,
+            ignored: self.ignored,
+            ignore_older: flag,
             verbose: self.verbose,
         }
     }
@@ -104,6 +119,7 @@ impl Options {
             paths: self.paths.clone(),
             dirty: self.dirty,
             ignored: self.ignored,
+            ignore_older: self.ignore_older,
             verbose: flag,
         }
     }
@@ -114,6 +130,7 @@ impl Options {
             paths: input,
             dirty: self.dirty,
             ignored: self.ignored,
+            ignore_older: self.ignore_older,
             verbose: self.verbose,
         }
     }
@@ -236,11 +253,16 @@ fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut Utf8PathBuf) ->
     })
 }
 
-fn touch_if_older(path: Utf8PathBuf, time: i64, verbose: bool) -> Result<bool> {
+fn touch_if_time_mismatch(
+    path: Utf8PathBuf,
+    time: i64,
+    verbose: bool,
+    ignore_older: bool,
+) -> Result<bool> {
     let commit_time = FileTime::from_unix_time(time, 0);
     let metadata = fs::metadata(&path).context(IoSnafu)?;
     let file_mtime = FileTime::from_last_modification_time(&metadata);
-    if file_mtime != commit_time {
+    if file_mtime > commit_time || (!ignore_older && file_mtime < commit_time) {
         filetime::set_file_mtime(&path, commit_time).context(IoSnafu)?;
         if verbose {
             println!("Rewound the clock: {path}");
@@ -296,7 +318,12 @@ fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) ->
             let affected = diff_affects_oid(&diff, oid, touchable_path);
             if affected {
                 let time = commit.time().seconds();
-                if let Ok(true) = touch_if_older(touchable_path.to_path_buf(), time, opts.verbose) {
+                if let Ok(true) = touch_if_time_mismatch(
+                    touchable_path.to_path_buf(),
+                    time,
+                    opts.verbose,
+                    opts.ignore_older,
+                ) {
                     touched
                         .write()
                         .unwrap()

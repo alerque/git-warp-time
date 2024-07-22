@@ -13,6 +13,10 @@ pub struct Cli {
     #[clap(short, long)]
     pub ignored: bool,
 
+    /// Only touch files that are newer than their history, ignore ones that are older
+    #[clap(short = 'o', long)]
+    pub ignore_older: bool,
+
     /// Don't print any output about files touched or skipped
     #[clap(short, long)]
     pub quiet: bool,

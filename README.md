@@ -26,21 +26,24 @@ For more usage see the `--help` output:
 
 ```console
 $ git-warp-time --help
-CLI utility that resets the timestamps of files in a Git repository working directory to the exact
-timestamp of the last commit which modified each file
+CLI utility that resets the timestamps of files in a Git repository working
+directory to the exact timestamp of the last commit which modified each file
 
 Usage: git-warp-time [OPTIONS] [PATHS]...
 
 Arguments:
-  [PATHS]...  Optional list of paths to operate on instead of default which is all files tracked by
-              Git
+  [PATHS]...  Optional list of paths to operate on instead of default which is
+              all files tracked by Git
 
 Options:
-  -d, --dirty    Include files tracked by Git but modifications in the working tee
-  -i, --ignored  Include files tracked by Git but also ignored
-  -q, --quiet    Don't print any output about files touched or skipped
-  -h, --help     Print help
-  -V, --version  Print version
+  -d, --dirty         Include files tracked by Git but modifications in the
+                      working tee
+  -i, --ignored       Include files tracked by Git but also ignored
+  -o, --ignore-older  Only touch files that are newer than their history, ignore
+                      ones that are older
+  -q, --quiet         Don't print any output about files touched or skipped
+  -h, --help          Print help
+  -V, --version       Print version
 ```
 
 ## Library Usage
@@ -49,7 +52,7 @@ In your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-git-warp-time = "0.7"
+git-warp-time = "0.8"
 ```
 
 Then use the crate functions and types in your project something like this:

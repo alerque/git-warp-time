@@ -44,6 +44,7 @@ fn main() -> Result<()> {
     let mut opts = git_warp_time::Options::new()
         .dirty(matches.get_flag("dirty"))
         .ignored(matches.get_flag("ignored"))
+        .ignore_older(matches.get_flag("ignore_older"))
         .verbose(!matches.get_flag("quiet"));
     if matches.contains_id("paths") {
         let mut paths: FileSet = FileSet::new();
