@@ -5,11 +5,12 @@ AC_CONFIG_MACRO_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign tar-pax dist-zstd dist-zip no-dist-gzip color-tests])
 AM_SILENT_RULES([yes])
 
+# Load up re-usable m4 bits shared across Caleb's projects
+QUE_GIT_VERSION
 QUE_TRANSFORM_PACKAGE_NAME
 QUE_DEVELOPER_MODE
-
-QUE_GIT_VERSION
 QUE_DIST_CHECKSUMS
+
 
 AM_COND_IF([DEVELOPER_MODE], [
     QUE_PROGVAR([gitcliff], [git-cliff])
