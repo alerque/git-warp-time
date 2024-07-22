@@ -1,3 +1,9 @@
+## [0.8.1] - 2024-07-22
+
+### Features
+
+- *(cli)* Add flag to handle only newer not older files
+
 ## [0.8.0] - 2024-07-19
 
 ### Features
