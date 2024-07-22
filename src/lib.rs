@@ -253,7 +253,7 @@ fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut Utf8PathBuf) ->
     })
 }
 
-fn touch_if_older(path: Utf8PathBuf, time: i64, verbose: bool) -> Result<bool> {
+fn touch_if_time_mismatch(path: Utf8PathBuf, time: i64, verbose: bool) -> Result<bool> {
     let commit_time = FileTime::from_unix_time(time, 0);
     let metadata = fs::metadata(&path).context(IoSnafu)?;
     let file_mtime = FileTime::from_last_modification_time(&metadata);
@@ -313,7 +313,9 @@ fn process_touchables(repo: &Repository, touchables: FileSet, opts: &Options) ->
             let affected = diff_affects_oid(&diff, oid, touchable_path);
             if affected {
                 let time = commit.time().seconds();
-                if let Ok(true) = touch_if_older(touchable_path.to_path_buf(), time, opts.verbose) {
+                if let Ok(true) =
+                    touch_if_time_mismatch(touchable_path.to_path_buf(), time, opts.verbose)
+                {
                     touched
                         .write()
                         .unwrap()
