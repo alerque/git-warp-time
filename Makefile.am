@@ -15,7 +15,7 @@ EXTRA_git_warp_time_SOURCES =
 EXTRA_DIST = Dockerfile hooks/build
 dist_doc_DATA = README.md
 dist_license_DATA = LICENSE.md
-dist_man_MANS =
+nodist_man_MANS =
 
 BUILT_SOURCES =
 
