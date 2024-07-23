@@ -1,0 +1,2 @@
+lint:
+	echo foo
