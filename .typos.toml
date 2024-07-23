@@ -1,6 +1,9 @@
 [default]
 locale = "en-us"
 
+[default.extend-words]
+soures = "sources"
+
 [files]
 ignore-hidden = false
 extend-exclude = ["/.git"]
