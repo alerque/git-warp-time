@@ -76,7 +76,7 @@ commit_parsers = [
   { message = ".*", skip = true },
 ]
 commit_preprocessors = [
-  { pattern = '.*', replace_command = 'typos --write-changes -' },
+  { pattern = '.*', replace_command = 'typos --quiet --write-changes -' },
 ]
 
 [package.metadata.typos.default]
