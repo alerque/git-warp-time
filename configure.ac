@@ -14,6 +14,7 @@ QUE_DIST_CHECKSUMS
 
 AM_COND_IF([DEVELOPER_MODE], [
     QUE_PROGVAR([gitcliff], [git-cliff])
+    QUE_PROGVAR([just], [just])
     QUE_PROGVAR([typos], [typos])
 ])
 
