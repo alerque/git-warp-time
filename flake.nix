@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: © 2021 Caleb Maclennan <caleb@alerque.com>
+# SPDX-License-Identifier: GPL-3.0-only
 {
   description = "Rust library and CLI utility to reset file timestamps to repo state";
   inputs = {

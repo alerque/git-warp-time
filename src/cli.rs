@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: © 2021 Caleb Maclennan <caleb@alerque.com>
+// SPDX-License-Identifier: GPL-3.0-only
+
 use clap::Parser;
 
 /// CLI utility that resets the timestamps of files in a Git repository working directory

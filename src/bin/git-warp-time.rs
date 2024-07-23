@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: © 2021 Caleb Maclennan <caleb@alerque.com>
+// SPDX-License-Identifier: GPL-3.0-only
+
 use clap::CommandFactory;
 
 use git_warp_time::cli::Cli;

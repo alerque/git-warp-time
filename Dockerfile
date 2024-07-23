@@ -1,4 +1,7 @@
-#syntax=docker/dockerfile:1.2
+# SPDX-FileCopyrightText: © 2021 Caleb Maclennan <caleb@alerque.com>
+# SPDX-License-Identifier: GPL-3.0-only
+
+# syntax=docker/dockerfile:1.2
 
 ARG ALPINETAG
 
