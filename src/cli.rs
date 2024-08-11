@@ -2,12 +2,17 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 use clap::Parser;
+use clap_complete::dynamic::{ArgValueCompleter, CompleteCommand, CompletionCandidate};
 
 /// CLI utility that resets the timestamps of files in a Git repository working directory
 /// to the exact timestamp of the last commit which modified each file.
 #[derive(Parser, Debug)]
 #[command(author, bin_name = "git-warp-time")]
 pub struct Cli {
+    /// Used internally by Clap to generate dynamic completions
+    #[command(subcommand)]
+    pub _complete: Option<CompleteCommand>,
+
     /// Include files tracked by Git but modifications in the working tee
     #[arg(short, long)]
     pub dirty: bool,
@@ -25,6 +30,16 @@ pub struct Cli {
     pub quiet: bool,
 
     /// Optional list of paths to operate on instead of default which is all files tracked by Git
-    #[arg(value_hint = clap::ValueHint::FilePath)]
+    #[arg(add = generate_path_completions())]
     pub paths: Option<Vec<String>>,
+}
+
+fn generate_path_completions() -> ArgValueCompleter {
+    ArgValueCompleter::new(|| {
+        vec![
+            CompletionCandidate::new("foo"),
+            CompletionCandidate::new("bar"),
+            CompletionCandidate::new("baz"),
+        ]
+    })
 }

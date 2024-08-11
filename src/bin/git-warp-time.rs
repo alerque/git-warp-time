@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: © 2021 Caleb Maclennan <caleb@alerque.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use clap::CommandFactory;
+use clap::{CommandFactory, Parser};
 
 use git_warp_time::cli::Cli;
 use git_warp_time::FileSet;
@@ -40,6 +40,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 
 fn main() -> Result<()> {
     let version = option_env!("VERGEN_GIT_DESCRIBE").unwrap_or_else(|| env!("CARGO_PKG_VERSION"));
+    let cli = Cli::parse();
     let app = Cli::command().version(version);
     let matches = app.get_matches();
     let positionals = matches.get_many::<String>("paths");
@@ -49,17 +50,21 @@ fn main() -> Result<()> {
         .ignored(matches.get_flag("ignored"))
         .ignore_older(matches.get_flag("ignore_older"))
         .verbose(!matches.get_flag("quiet"));
-    if matches.contains_id("paths") {
-        let mut paths: FileSet = FileSet::new();
-        for path in positionals.context(UnableToFormPathSnafu)? {
-            if !Path::new(path).exists() {
-                return PathNotFoundSnafu { path: path.clone() }.fail();
+    if let Some(completions) = cli._complete {
+        completions.complete(&mut Cli::command());
+    } else {
+        if matches.contains_id("paths") {
+            let mut paths: FileSet = FileSet::new();
+            for path in positionals.context(UnableToFormPathSnafu)? {
+                if !Path::new(path).exists() {
+                    return PathNotFoundSnafu { path: path.clone() }.fail();
+                }
+                let path = resolve_repo_path(&repo, path).context(CouldNotAccessRepositorySnafu)?;
+                paths.insert(path);
             }
-            let path = resolve_repo_path(&repo, path).context(CouldNotAccessRepositorySnafu)?;
-            paths.insert(path);
+            opts = opts.paths(Some(paths));
         }
-        opts = opts.paths(Some(paths));
+        reset_mtimes(repo, opts).context(UnableToResetMTimeSnafu)?;
     }
-    reset_mtimes(repo, opts).context(UnableToResetMTimeSnafu)?;
     Ok(())
 }
