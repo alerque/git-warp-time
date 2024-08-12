@@ -25,5 +25,6 @@ pub struct Cli {
     pub quiet: bool,
 
     /// Optional list of paths to operate on instead of default which is all files tracked by Git
-    pub paths: Vec<String>,
+    #[arg(value_hint = clap::ValueHint::FilePath)]
+    pub paths: Option<Vec<String>>,
 }
