@@ -11,15 +11,23 @@ use {
 #[cfg(feature = "completions")]
 use {
     clap::CommandFactory,
+    clap_complete::dynamic::ArgValueCompleter,
     clap_complete::generator::generate_to,
     clap_complete::shells::{Bash, Elvish, Fish, PowerShell, Zsh},
     std::{fs, path::Path},
 };
 
 #[cfg(feature = "completions")]
+fn generate_path_completions() -> ArgValueCompleter {
+    ArgValueCompleter::new(|| vec![])
+}
+
+#[cfg(feature = "completions")]
 include!("../src/cli.rs");
 
 fn main() -> Result<()> {
+    println!("cargo:rustc-cfg=build");
+    println!("cargo:rustc-check-cfg=cfg(build)");
     if let Ok(val) = env::var("AUTOTOOLS_DEPENDENCIES") {
         for dependency in val.split(' ') {
             println!("cargo:rerun-if-changed={dependency}");

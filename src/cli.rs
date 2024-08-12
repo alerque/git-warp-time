@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 use clap::Parser;
-use clap_complete::dynamic::{ArgValueCompleter, CompleteCommand, CompletionCandidate};
+use clap_complete::dynamic::CompleteCommand;
+
+#[cfg(all(build, feature = "completions"))]
+use crate::generate_path_completions;
 
 /// CLI utility that resets the timestamps of files in a Git repository working directory
 /// to the exact timestamp of the last commit which modified each file.
@@ -30,16 +33,6 @@ pub struct Cli {
     pub quiet: bool,
 
     /// Optional list of paths to operate on instead of default which is all files tracked by Git
-    #[arg(add = generate_path_completions())]
+    #[cfg_attr(feature = "completions", arg(add = generate_path_completions))]
     pub paths: Option<Vec<String>>,
-}
-
-fn generate_path_completions() -> ArgValueCompleter {
-    ArgValueCompleter::new(|| {
-        vec![
-            CompletionCandidate::new("foo"),
-            CompletionCandidate::new("bar"),
-            CompletionCandidate::new("baz"),
-        ]
-    })
 }

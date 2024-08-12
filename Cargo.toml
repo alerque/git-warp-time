@@ -73,6 +73,9 @@ snafu = "0.8"
   default-features = false
   features = [ "build", "cargo", "rustc" ]
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(build)'] }
+
 [package.metadata.git-cliff.git]
 protect_breaking_commits = true
 commit_parsers = [
