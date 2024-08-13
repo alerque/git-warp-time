@@ -18,7 +18,7 @@ required-features = ["cli"]
 
 [features]
 default = ["cli", "bash", "elvish", "fish", "manpage", "powershell", "zsh"]
-completions = ["cli", "clap_complete"]
+completions = ["cli", "dep:clap_complete"]
 cli = ["clap"]
 bash = ["completions"]
 elvish = ["completions"]
@@ -40,19 +40,25 @@ snafu = "0.8"
   optional = true
   features = [ "derive", "wrap_help" ]
 
+  [dependencies.clap_complete]
+  version = "4.5"
+  optional = true
+  features = [ "unstable-dynamic" ]
+
   [dependencies.git2]
   version = "0.19"
   default-features = false
 
 [build-dependencies]
 
-  [build-dependencies.clap_complete]
-  version = "4.5"
-  optional = true
-
   [build-dependencies.clap_mangen]
   version = "0.2"
   optional = true
+
+  [build-dependencies.clap_complete]
+  version = "4.5"
+  optional = true
+  features = [ "unstable-dynamic" ]
 
   [build-dependencies.clap]
   version = "4.5"
@@ -66,6 +72,9 @@ snafu = "0.8"
   version = "1.0"
   default-features = false
   features = [ "build", "cargo", "rustc" ]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(build)'] }
 
 [package.metadata.git-cliff.git]
 protect_breaking_commits = true
