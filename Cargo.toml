@@ -82,6 +82,9 @@ commit_preprocessors = [
 [package.metadata.typos.default]
 locale = "en-us"
 
+[package.metadata.typos.default.extend-words]
+soures = "sources"
+
 [package.metadata.typos.files]
 ignore-hidden = false
 extend-exclude = ["/.git"]
