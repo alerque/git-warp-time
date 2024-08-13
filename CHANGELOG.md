@@ -1,3 +1,9 @@
+## [0.8.4] - 2024-08-13
+
+### Features
+
+- *(cli)* Add completion hint so shells know when to provide paths
+
 ## [0.8.3] - 2024-07-22
 
 ### Bug Fixes
