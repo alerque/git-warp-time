@@ -78,3 +78,10 @@ commit_parsers = [
 commit_preprocessors = [
   { pattern = '.*', replace_command = 'typos --write-changes -' },
 ]
+
+[package.metadata.typos.default]
+locale = "en-us"
+
+[package.metadata.typos.files]
+ignore-hidden = false
+extend-exclude = ["/.git"]
