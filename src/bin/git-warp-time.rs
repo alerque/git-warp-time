@@ -28,8 +28,8 @@ enum Error {
     UnableToFormPath {},
 }
 
-// CLI errors are reported using the Debug trait, but Snafu sets up the Display tait. So we
-// deligate. c.f. https://github.com/shepmaster/snafu/issues/110
+// Clap CLI errors are reported using the Debug trait, but Snafu sets up the Display trait.
+// So we delegate. c.f. https://github.com/shepmaster/snafu/issues/110
 impl std::fmt::Debug for Error {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         std::fmt::Display::fmt(self, fmt)
