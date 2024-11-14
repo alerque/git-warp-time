@@ -245,6 +245,20 @@ fn gather_workdir_files(repo: &Repository) -> Result<FileSet> {
     Ok(workdir_files)
 }
 
+#[cfg(feature = "completions")]
+pub fn generate_path_completions() -> ArgValueCompleter {
+    let repo = get_repo();
+    let tracked_files = gather_workdir_files(repo);
+    dbg!(tracked_files);
+    ArgValueCompleter::new(|| {
+        vec![
+            CompletionCandidate::new("foo"),
+            CompletionCandidate::new("bar"),
+            CompletionCandidate::new("baz"),
+        ]
+    })
+}
+
 fn diff_affects_oid(diff: &Diff, oid: &Oid, touchable_path: &mut Utf8PathBuf) -> bool {
     diff.deltas().any(|delta| {
         delta.new_file().id() == *oid
