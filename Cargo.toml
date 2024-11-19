@@ -35,37 +35,37 @@ camino = "1.1"
 filetime = "0.2"
 snafu = "0.8"
 
-  [dependencies.clap]
-  version = "4.5"
-  optional = true
-  features = [ "derive", "wrap_help" ]
+[dependencies.clap]
+version = "4.5"
+optional = true
+features = ["derive", "wrap_help"]
 
-  [dependencies.git2]
-  version = "0.19"
-  default-features = false
+[dependencies.git2]
+version = "0.19"
+default-features = false
 
 [build-dependencies]
 
-  [build-dependencies.clap_complete]
-  version = "4.5"
-  optional = true
+[build-dependencies.clap_complete]
+version = "4.5"
+optional = true
 
-  [build-dependencies.clap_mangen]
-  version = "0.2"
-  optional = true
+[build-dependencies.clap_mangen]
+version = "0.2"
+optional = true
 
-  [build-dependencies.clap]
-  version = "4.5"
-  optional = true
-  features = [ "derive" ]
+[build-dependencies.clap]
+version = "4.5"
+optional = true
+features = ["derive"]
 
-  [build-dependencies.anyhow]
-  version = "1.0"
+[build-dependencies.anyhow]
+version = "1.0"
 
-  [build-dependencies.vergen-gix]
-  version = "1.0"
-  default-features = false
-  features = [ "build", "cargo", "rustc" ]
+[build-dependencies.vergen-gix]
+version = "1.0"
+default-features = false
+features = ["build", "cargo", "rustc"]
 
 [package.metadata.git-cliff.git]
 protect_breaking_commits = true
