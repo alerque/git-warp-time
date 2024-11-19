@@ -11,9 +11,11 @@ QUE_TRANSFORM_PACKAGE_NAME
 QUE_DEVELOPER_MODE
 QUE_DIST_CHECKSUMS
 
-
 AM_COND_IF([DEVELOPER_MODE], [
+    # Release tooling
+    QUE_PROGVAR([cargosetversion], [cargo-set-version])
     QUE_PROGVAR([gitcliff], [git-cliff])
+    QUE_PROGVAR([taplo])
     QUE_PROGVAR([typos], [typos])
 ])
 
