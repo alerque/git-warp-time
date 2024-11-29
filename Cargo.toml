@@ -87,4 +87,8 @@ soures = "sources"
 
 [package.metadata.typos.files]
 ignore-hidden = false
-extend-exclude = ["/.git"]
+extend-exclude = [
+  "/.git",
+  "CHANGELOG.md",
+  "build-aux/ax*",
+]
