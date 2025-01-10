@@ -24,8 +24,8 @@ jobs:
           echo "REF=${GITHUB_REF##refs/*/}" >> $GITHUB_ENV
           ./bootstrap.sh
           ./configure  \
-            GITCLIFF=: TYPOS=:\
             --enable-developer-mode \
+            GITCLIFF=: JUST=: TAPLO=: TYPOS=: \
             --without-{bash,fish,zsh}-completion-dir
       - name: Publish Docker Image to GH Container Registry
         run: |

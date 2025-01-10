@@ -24,8 +24,8 @@ jobs:
         run: |
           ./bootstrap.sh
           ./configure  \
-            GITCLIFF=: TYPOS=:\
             --enable-developer-mode \
+            GITCLIFF=: JUST=: TAPLO=: TYPOS=:\
             --without-{bash,fish,zsh}-completion-dir
           echo "VERSION=$(./build-aux/git-version-gen .tarball-version)" >> $GITHUB_ENV
       - name: Build source package
