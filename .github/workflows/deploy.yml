@@ -25,7 +25,7 @@ jobs:
           ./bootstrap.sh
           ./configure  \
             --enable-developer-mode \
-            GITCLIFF=: JUST=: TAPLO=: TYPOS=: \
+            CARGO_SET_VERSION=: GIT_CLIFF=: JUST=: TAPLO=: TYPOS=: \
             --without-{bash,fish,zsh}-completion-dir
       - name: Publish Docker Image to GH Container Registry
         run: |

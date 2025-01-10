@@ -35,13 +35,23 @@ include $(top_srcdir)/aminclude.am
 PHONY_DEVELOPER_TARGETS = release-preview
 .PHONY: $(PHONY_DEVELOPER_TARGETS)
 
+SEMVER := $(shell $(AWK) -F\" '/^version/ { print $$2 }' $(top_srcdir)/Cargo.toml)
+TAG := v$(SEMVER)
+
 if DEVELOPER_MODE
 
 release-preview:
 	$(GIT_CLIFF) --unreleased
 
-CHANGELOG.md: .version
-	$(GIT_CLIFF) -o $@
+CHANGELOG.md:
+	$(GIT_CLIFF) -p $@ --unreleased -t $(TAG)
+
+git-warp-time-%.md: CHANGELOG.md
+	$(SED) -e '/^## \[$*\]/,/^## \[/!d' $< | \
+		$(SED) -e '1s/^/Release v$*\n/' | \
+		$(SED) -e '/^#/d' -e '/^$$/d' | \
+		$(SED) -e 's/\*//g' | \
+		$(SED) -e '1a\\' > $@
 
 else !DEVELOPER_MODE
 
