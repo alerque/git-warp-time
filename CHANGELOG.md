@@ -1,3 +1,18 @@
+## [0.8.5] - 2025-01-10
+
+### Features
+
+- *(deps)* Bump git2 crate to build with latest libgit2
+- *(build)* Add release automation tooling adapted from decasify
+
+### Bug Fixes
+
+- *(build)* Set correct final permissions on intermediary shell completion artifacts
+
+### Performance
+
+- *(tooling)* Eschew unused autotools dependency tracking
+
 ## [0.8.4] - 2024-08-13
 
 ### Features
