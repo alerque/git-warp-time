@@ -13,11 +13,11 @@ QUE_DIST_CHECKSUMS
 
 AM_COND_IF([DEVELOPER_MODE], [
     # Release tooling
-    QUE_PROGVAR([cargosetversion], [cargo-set-version])
-    QUE_PROGVAR([gitcliff], [git-cliff])
-    QUE_PROGVAR([just])
-    QUE_PROGVAR([taplo])
-    QUE_PROGVAR([typos], [typos])
+    AX_REQUIRE_PROG([cargo-set-version])
+    AX_REQUIRE_PROG([git-cliff])
+    AX_REQUIRE_PROG([just])
+    AX_REQUIRE_PROG([taplo])
+    AX_REQUIRE_PROG([typos])
 ])
 
 QUE_RUST_BOILERPLATE

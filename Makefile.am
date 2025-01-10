@@ -38,10 +38,10 @@ PHONY_DEVELOPER_TARGETS = release-preview
 if DEVELOPER_MODE
 
 release-preview:
-	$(GITCLIFF) --unreleased
+	$(GIT_CLIFF) --unreleased
 
 CHANGELOG.md: .version
-	$(GITCLIFF) -o $@
+	$(GIT_CLIFF) -o $@
 
 else !DEVELOPER_MODE
 
