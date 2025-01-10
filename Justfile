@@ -40,4 +40,3 @@ post-release semver: keys
 	gh release upload v{{semver}} git-warp-time-{{semver}}.{tar.zst,zip}.asc
 
 # vim: set ft=just
-
