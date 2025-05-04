@@ -86,7 +86,7 @@ For GitHub Actions this looks like so:
         with:
           fetch-depth: 0
       - name: Git Warp Time
-        uses: alerque/git-warp-time:latest
+        uses: alerque/git-warp-time@latest
 ```
 
 # The story
