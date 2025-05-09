@@ -26,10 +26,6 @@ pub enum Error {
     LibGitError {
         source: git2::Error,
     },
-    #[snafu(display("Paths {} are not tracked in the repository.", paths))]
-    PathNotTracked {
-        paths: String,
-    },
     #[snafu(display("Cannot remove prefix from path:\n{}", source))]
     PathError {
         source: std::path::StripPrefixError,
@@ -146,11 +142,6 @@ pub fn reset_mtimes(repo: Repository, opts: Options) -> Result<FileSet> {
     let workdir_files = gather_workdir_files(&repo)?;
     let touchables: FileSet = match opts.paths {
         Some(ref paths) => {
-            let not_tracked = paths.difference(&workdir_files);
-            if not_tracked.clone().count() > 0 {
-                let not_tracked = format!("{not_tracked:?}");
-                return PathNotTrackedSnafu { paths: not_tracked }.fail();
-            }
             workdir_files.intersection(paths).cloned().collect()
         }
         None => {
