@@ -3,7 +3,7 @@
 
 use clap::CommandFactory;
 
-use git_warp_time::cli::Cli;
+use git_warp_time::cli::{Cli, STYLES};
 use git_warp_time::FileSet;
 use git_warp_time::{get_repo, reset_mtimes, resolve_repo_path};
 
@@ -40,7 +40,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 
 fn main() -> Result<()> {
     let version = option_env!("VERGEN_GIT_DESCRIBE").unwrap_or_else(|| env!("CARGO_PKG_VERSION"));
-    let app = Cli::command().version(version);
+    let app = Cli::command().version(version).styles(STYLES);
     let matches = app.get_matches();
     let positionals = matches.get_many::<String>("paths");
     let repo = get_repo().context(NoRepositorySnafu)?;

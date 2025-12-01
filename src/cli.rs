@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: © 2021 Caleb Maclennan <caleb@alerque.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
+use clap::builder::styling::{AnsiColor, Styles};
 use clap::Parser;
 
 /// CLI utility that resets the timestamps of files in a Git repository working directory
@@ -28,3 +29,12 @@ pub struct Cli {
     #[arg(value_hint = clap::ValueHint::FilePath)]
     pub paths: Option<Vec<String>>,
 }
+
+pub const STYLES: Styles = Styles::styled()
+    .header(AnsiColor::Magenta.on_default().bold())
+    .usage(AnsiColor::Yellow.on_default().bold())
+    .literal(AnsiColor::BrightCyan.on_default().bold())
+    .placeholder(AnsiColor::Cyan.on_default())
+    .error(AnsiColor::BrightRed.on_default().bold())
+    .valid(AnsiColor::BrightGreen.on_default().bold())
+    .invalid(AnsiColor::BrightYellow.on_default().bold());
