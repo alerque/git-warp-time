@@ -4,15 +4,13 @@
 , libgit2
 , naersk
 , stdenv
-, hostPlatform
-, targetPlatform
 , cargo
 , rustc
 }:
 let
   cargoToml = (builtins.fromTOML (builtins.readFile ./Cargo.toml));
 in
-naersk.lib."${targetPlatform.system}".buildPackage rec {
+naersk.lib."${stdenv.hostPlatform.system}".buildPackage rec {
   src = ./.;
   buildInputs = [
     cargo
