@@ -1,3 +1,9 @@
+## [1.0.0] - 2025-12-27
+
+### Features
+
+- *(cli)* Add colors to CLI help outputs
+- *(cli)* [**breaking**] Ditch zerover, rock it with semver
 ## [0.8.5] - 2025-01-10
 
 ### Features
