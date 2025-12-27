@@ -4,7 +4,7 @@
   description = "Rust library and CLI utility to reset file timestamps to repo state";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    naersk.url = "github:nmattia/naersk";
+    naersk.url = "github:nix-community/naersk";
     naersk.inputs.nixpkgs.follows = "nixpkgs";
   };
   outputs = { self, nixpkgs, naersk }:
