@@ -7,16 +7,27 @@
     naersk.url = "github:nix-community/naersk";
     naersk.inputs.nixpkgs.follows = "nixpkgs";
   };
-  outputs = { self, nixpkgs, naersk }:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      naersk,
+    }:
     let
       cargoToml = (builtins.fromTOML (builtins.readFile ./Cargo.toml));
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
+      supportedSystems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+      ];
       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
-      pkgsFor = forAllSystems (system:
+      pkgsFor = forAllSystems (
+        system:
         import nixpkgs {
           inherit system;
           overlays = [ self.overlays.default ];
-        });
+        }
+      );
     in
     {
       overlays.default = final: prev: {
@@ -26,7 +37,8 @@
         default = pkgsFor.${system}.${cargoToml.package.name};
         ${cargoToml.package.name} = pkgsFor.${system}.${cargoToml.package.name};
       });
-      devShells = forAllSystems (system:
+      devShells = forAllSystems (
+        system:
         let
           pkgs = pkgsFor.${system};
         in
@@ -37,6 +49,7 @@
               libgit2
             ];
           };
-        });
+        }
+      );
     };
 }

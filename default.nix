@@ -1,11 +1,12 @@
 # SPDX-FileCopyrightText: © 2021 Caleb Maclennan <caleb@alerque.com>
 # SPDX-License-Identifier: GPL-3.0-only
-{ lib
-, libgit2
-, naersk
-, stdenv
-, cargo
-, rustc
+{
+  lib,
+  libgit2,
+  naersk,
+  stdenv,
+  cargo,
+  rustc,
 }:
 let
   cargoToml = (builtins.fromTOML (builtins.readFile ./Cargo.toml));
