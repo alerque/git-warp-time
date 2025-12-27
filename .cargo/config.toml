@@ -1,3 +1,0 @@
-[resolver]
-incompatible-rust-versions = "fallback"
-
