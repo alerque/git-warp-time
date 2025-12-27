@@ -31,7 +31,7 @@ rel-conf: nuke-n-pave
 
 [parallel]
 build:
-    {{ make }} $0
+    {{ make }}
 
 check:
     {{ make }} $0
