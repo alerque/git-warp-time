@@ -32,13 +32,21 @@ DISTCLEANFILES = @AMINCLUDE@
 # functionality and hence can use conditionals in included makefile fragments.
 include $(top_srcdir)/aminclude.am
 
-PHONY_DEVELOPER_TARGETS = release-preview
+.PHONY: build
+build: $(bin_PROGRAMS)
+
+PHONY_DEVELOPER_TARGETS = release-preview typos
 .PHONY: $(PHONY_DEVELOPER_TARGETS)
 
 SEMVER := $(shell $(AWK) -F\" '/^version/ { print $$2 }' $(top_srcdir)/Cargo.toml)
 TAG := v$(SEMVER)
 
 if DEVELOPER_MODE
+
+lint: typos
+
+typos:
+	$(TYPOS) .
 
 release-preview:
 	$(GIT_CLIFF) --unreleased

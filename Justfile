@@ -5,6 +5,7 @@ git := require('git')
 gpg := require('gpg')
 just := just_executable()
 make := require('make')
+rustfmt := require('rustfmt')
 taplo := require('taplo')
 
 set script-interpreter := ["zsh", "+o", "nomatch", "-eu"]
@@ -31,7 +32,7 @@ rel-conf: nuke-n-pave
 
 [parallel]
 build:
-    {{ make }}
+    {{ make }} $0
 
 check:
     {{ make }} $0
@@ -41,6 +42,10 @@ lint:
 
 perfect:
     {{ make }} build check lint
+
+restyle:
+    {{ git }} ls-files '*.rs' '*.rs.in' | xargs {{ rustfmt }} --edition 2024 --config skip_children=true
+    {{ git }} ls-files '*.toml' | xargs {{ taplo }} format
 
 [doc('Block execution if Git working tree isn’t pristine.')]
 [private]
