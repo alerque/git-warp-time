@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: © 2021 Caleb Maclennan <caleb@alerque.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-use clap::builder::styling::{AnsiColor, Styles};
 use clap::Parser;
+use clap::builder::styling::{AnsiColor, Styles};
 
 /// CLI utility that resets the timestamps of files in a Git repository working directory
 /// to the exact timestamp of the last commit which modified each file.

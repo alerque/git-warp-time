@@ -3,8 +3,8 @@
 
 use clap::CommandFactory;
 
-use git_warp_time::cli::{Cli, STYLES};
 use git_warp_time::FileSet;
+use git_warp_time::cli::{Cli, STYLES};
 use git_warp_time::{get_repo, reset_mtimes, resolve_repo_path};
 
 use snafu::prelude::*;

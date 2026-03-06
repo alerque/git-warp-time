@@ -72,7 +72,7 @@ clean-local: clean-cargo
 check-local: cargo-test
 
 rustfmt:
-	$(GIT) ls-files '*.rs' '*.rs.in' | $(XARGS) $(RUSTFMT) --check --config skip_children=true
+	$(GIT) ls-files '*.rs' '*.rs.in' | $(XARGS) $(RUSTFMT) --edition 2024 --check --config skip_children=true
 
 clippy:
 	$(CARGO_ENV) $(CARGO) $(CARGO_VERBOSE) clippy $(CARGO_FEATURE_ARGS) -- -D warnings
