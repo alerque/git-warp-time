@@ -31,9 +31,9 @@ zsh = ["completions"]
 lto = true
 
 [dependencies]
-camino = "1.1"
+camino = "1.2"
 filetime = "0.2"
-snafu = "0.8"
+snafu = "0.9"
 
 [dependencies.clap]
 version = "4.5"
