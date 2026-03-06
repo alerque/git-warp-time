@@ -11,7 +11,7 @@ For use as a Rust library, include in your `Cargo.toml` as documented on the [cr
 
 <a href="https://repology.org/project/git-warp-time/versions"><img src="https://repology.org/badge/vertical-allrepos/git-warp-time.svg" align="right" alt="Packaging status"> </a>
 For use as a CLI utility, first check whether your distro has packages (e.g. [Arch Linux](https://archlinux.org/packages/extra/x86_64/git-warp-time/)).
-Otherwise you can run this repository as a Nix Flake with `nix run github:alerque/git-warp-time`, install just plain binary with `cargo install git-warp-time`, or download the [latest](https://github.com/alerque/git-warp-time/releases/latest) source release and use `./configure; make; make install` for a full installation that includes autcompletion for Zsh, Bash, Fish, Elvish, and PowerShell.
+Otherwise you can run this repository as a Nix Flake with `nix run github:alerque/git-warp-time`, install just plain binary with `cargo install --locked git-warp-time`, or download the [latest](https://github.com/alerque/git-warp-time/releases/latest) source release and use `./configure; make; make install` for a full installation that includes autcompletion for Zsh, Bash, Fish, Elvish, and PowerShell.
 
 ## CLI usage
 
