@@ -10,8 +10,8 @@ taplo := require('taplo')
 
 set script-interpreter := ["zsh", "+o", "nomatch", "-eu"]
 set shell := ["zsh", "+o", "nomatch", "-ecu"]
-set positional-arguments := true
-set unstable := true
+set positional-arguments
+set unstable
 
 [default]
 [private]
