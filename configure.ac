@@ -12,10 +12,10 @@ QUE_DEVELOPER_MODE
 QUE_DIST_CHECKSUMS
 
 AM_COND_IF([DEVELOPER_MODE], [
+    AX_REQUIRE_PROG([just])
     # Release tooling
     AX_REQUIRE_PROG([cargo-set-version])
     AX_REQUIRE_PROG([git-cliff])
-    AX_REQUIRE_PROG([just])
     AX_REQUIRE_PROG([taplo])
     AX_REQUIRE_PROG([typos])
 ])
