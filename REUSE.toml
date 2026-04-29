@@ -1,0 +1,40 @@
+version = 1
+
+[[annotations]]
+path = [
+  "*.nix",
+  "*.rs",
+  "src/",
+  "flake.lock",
+  "README.md",
+  "CHANGELOG.md",
+  "action.yml",
+]
+SPDX-FileCopyrightText = "© 2021 Caleb Maclennan <caleb@alerque.com>"
+SPDX-License-Identifier = "GPL-3.0-only"
+
+[[annotations]]
+path = [
+  "Makefile.am",
+  "bootstrap.sh",
+  "build-aux/*.am",
+  "build-aux/*.m4",
+  "build-aux/git-version-gen",
+  "configure.ac",
+]
+SPDX-FileCopyrightText = "© 2023 Caleb Maclennan <caleb@alerque.com>"
+SPDX-License-Identifier = "GPL-3.0-or-later"
+
+[[annotations]]
+path = [
+  ".editorconfig",
+  ".github/**.yml",
+  ".gitignore",
+  "Cargo.lock",
+  "Cargo.toml",
+  "Justfile",
+  "deny.toml",
+  "rust-toolchain",
+]
+SPDX-FileCopyrightText = "© 2023 Caleb Maclennan <caleb@alerque.com>"
+SPDX-License-Identifier = "0BSD"

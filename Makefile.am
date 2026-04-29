@@ -35,7 +35,7 @@ include $(top_srcdir)/aminclude.am
 .PHONY: build
 build: $(bin_PROGRAMS)
 
-PHONY_DEVELOPER_TARGETS = release-preview typos
+PHONY_DEVELOPER_TARGETS = release-preview reuse-lint typos
 .PHONY: $(PHONY_DEVELOPER_TARGETS)
 
 if DEVELOPER_MODE
@@ -43,7 +43,10 @@ if DEVELOPER_MODE
 SEMVER := $(shell $(AWK) -F\" '/^version/ { print $$2 }' $(top_srcdir)/Cargo.toml)
 TAG := v$(SEMVER)
 
-lint: typos
+lint: reuse-lint typos
+
+reuse-lint:
+	$(REUSE) lint
 
 typos:
 	$(TYPOS) .
