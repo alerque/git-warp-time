@@ -1,0 +1,10 @@
+edition = "2024"
+format_strings = true
+group_imports = "StdExternalCrate"
+# normalize_comments = true
+normalize_doc_attributes = true
+overflow_delimited_expr = true
+reorder_impl_items = true
+skip_children = true
+style_edition = "2024"
+unstable_features = true

@@ -44,7 +44,7 @@ perfect:
     {{ make }} build check lint
 
 restyle:
-    {{ git }} ls-files '*.rs' '*.rs.in' | xargs {{ rustfmt }} --edition 2024 --config skip_children=true
+    {{ git }} ls-files '*.rs' '*.rs.in' | xargs {{ rustfmt }} +nightly
     {{ git }} ls-files '*.toml' | xargs {{ taplo }} format
 
 [doc('Block execution if Git working tree isn’t pristine.')]
