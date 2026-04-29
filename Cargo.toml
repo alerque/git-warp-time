@@ -31,12 +31,12 @@ zsh = ["completions"]
 lto = true
 
 [dependencies]
-camino = "1.2"
+camino = "1"
 filetime = "0.2"
 snafu = "0.9"
 
 [dependencies.clap]
-version = "4.5"
+version = "4"
 optional = true
 features = ["derive", "color", "wrap_help"]
 
@@ -47,7 +47,7 @@ default-features = false
 [build-dependencies]
 
 [build-dependencies.clap_complete]
-version = "4.5"
+version = "4"
 optional = true
 
 [build-dependencies.clap_mangen]
@@ -55,15 +55,15 @@ version = "0.2"
 optional = true
 
 [build-dependencies.clap]
-version = "4.5"
+version = "4"
 optional = true
 features = ["derive"]
 
 [build-dependencies.anyhow]
-version = "1.0"
+version = "1"
 
 [build-dependencies.vergen-gix]
-version = "1.0" # held back for MSRV
+version = "1" # held back for MSRV
 default-features = false
 features = ["build", "cargo", "rustc"]
 
