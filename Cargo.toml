@@ -63,7 +63,7 @@ features = ["derive"]
 version = "1"
 
 [build-dependencies.vergen-gix]
-version = "1" # held back for MSRV
+version = "9"
 default-features = false
 features = ["build", "cargo", "rustc"]
 
