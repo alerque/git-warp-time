@@ -3,15 +3,15 @@
 
 #![doc = include_str!("../README.md")]
 
-use snafu::prelude::*;
-
-use camino::{Utf8Path, Utf8PathBuf};
-use filetime::FileTime;
-use git2::{Diff, Oid, Repository};
 use std::collections::{HashMap, HashSet};
 use std::convert::TryInto;
 use std::sync::{Arc, RwLock};
 use std::{env, fs};
+
+use camino::{Utf8Path, Utf8PathBuf};
+use filetime::FileTime;
+use git2::{Diff, Oid, Repository};
+use snafu::prelude::*;
 
 #[cfg(feature = "cli")]
 pub mod cli;
