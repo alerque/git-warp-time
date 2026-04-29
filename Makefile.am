@@ -38,10 +38,10 @@ build: $(bin_PROGRAMS)
 PHONY_DEVELOPER_TARGETS = release-preview typos
 .PHONY: $(PHONY_DEVELOPER_TARGETS)
 
+if DEVELOPER_MODE
+
 SEMVER := $(shell $(AWK) -F\" '/^version/ { print $$2 }' $(top_srcdir)/Cargo.toml)
 TAG := v$(SEMVER)
-
-if DEVELOPER_MODE
 
 lint: typos
 
